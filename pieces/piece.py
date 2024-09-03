@@ -17,8 +17,8 @@ class Piece():
             scaled_position = (self.position[0] * 100, self.position[1] * 100)
             self.controller.screen.blit(self.image, scaled_position)
 
-    def move(self):
-        pass
+    def move(self, new_position):
+        self.position = new_position
 
     def move_options(self):
         print("Piece")
