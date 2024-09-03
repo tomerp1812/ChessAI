@@ -1,11 +1,11 @@
 from board import Board
 from controller import Controller
-from pawn import Pawn
-from rook import Rook
-from knight import Knight
-from bishop import Bishop
-from queen import Queen
-from king import King
+from pieces.pawn import Pawn
+from pieces.rook import Rook
+from pieces.knight import Knight
+from pieces.bishop import Bishop
+from pieces.queen import Queen
+from pieces.king import King
 
 
 def main():
@@ -19,6 +19,19 @@ def main():
         for event in controller.pygame.event.get():
             if event.type == controller.pygame.QUIT:
                 run = False
+            if controller.pygame.mouse.get_pressed()[0]:
+                pos = controller.pygame.mouse.get_pos()
+                piece_clicked = piece_selected(pos, white_pieces, black_pieces)
+                if piece_clicked:
+                    if controller.pygame.mouse.get_pressed()[0]:
+                        pos = controller.pygame.mouse.get_pos()
+                        index_x = pos[0] // 100
+                        index_y = pos[1] // 100
+                        pos = (index_x, index_y)
+                        print(piece_clicked.move_options())
+                        if pos in piece_clicked.move_options():
+                            print("here")
+                            piece_clicked.position = pos
             board.draw_board()
             for piece in white_pieces:
                 piece.draw_piece()
@@ -26,6 +39,20 @@ def main():
                 piece.draw_piece()
             controller.pygame.display.update()
 
+def piece_selected(clicked_position, white_pieces, black_pieces):
+    index_x = clicked_position[0] // 100
+    index_y = clicked_position[1] // 100
+    for white_piece in white_pieces:
+        white_piece_x = white_piece.position[0]
+        white_piece_y = white_piece.position[1]
+        if index_x == white_piece_x and index_y == white_piece_y:
+            return white_piece
+    for black_piece in black_pieces:
+        black_piece_x = black_piece.position[0]
+        black_piece_y = black_piece.position[1]
+        if index_x == black_piece_x and index_y == black_piece_y:
+            return black_piece
+    return None
 
 def pieces_creator(controller):
     white_pieces = []
@@ -35,32 +62,33 @@ def pieces_creator(controller):
 
     for i in range(8):
         # create white pawns
-        position = (i*100, 600)
+        position = (i, 6)
         pawn = Pawn(white_color, position, "./pieces_images/white-pawn.png", controller)
         white_pieces.append(pawn)
-    rook1 = Rook(white_color, (0, 700), "./pieces_images/white-rook.png", controller)
-    knight1 = Knight(white_color, (100, 700), "./pieces_images/white-knight.png", controller)
-    bishop1 = Bishop(white_color, (200, 700), "./pieces_images/white-bishop.png", controller)
-    queen = Queen(white_color, (300, 700), "./pieces_images/white-queen.png", controller)
-    king = King(white_color, (400, 700), "./pieces_images/white-king.png", controller)
-    bishop2 = Bishop(white_color, (500, 700), "./pieces_images/white-bishop.png", controller)
-    knight2 = Knight(white_color, (600, 700), "./pieces_images/white-knight.png", controller)
-    rook2 = Rook(white_color, (700, 700), "./pieces_images/white-rook.png", controller)
+    white_pieces[0].move_options()
+    rook1 = Rook(white_color, (0, 7), "./pieces_images/white-rook.png", controller)
+    knight1 = Knight(white_color, (1, 7), "./pieces_images/white-knight.png", controller)
+    bishop1 = Bishop(white_color, (2, 7), "./pieces_images/white-bishop.png", controller)
+    queen = Queen(white_color, (3, 7), "./pieces_images/white-queen.png", controller)
+    king = King(white_color, (4, 7), "./pieces_images/white-king.png", controller)
+    bishop2 = Bishop(white_color, (5, 7), "./pieces_images/white-bishop.png", controller)
+    knight2 = Knight(white_color, (6, 7), "./pieces_images/white-knight.png", controller)
+    rook2 = Rook(white_color, (7, 7), "./pieces_images/white-rook.png", controller)
     white_pieces.extend([rook1, knight1, bishop1, queen, king, bishop2, knight2, rook2])
 
     for i in range(8):
         # create black pawns
-        position = (i*100, 100)
+        position = (i, 1)
         pawn = Pawn(black_color, position, "./pieces_images/black-pawn.png", controller)
         black_pieces.append(pawn)
     black_rook1 = Rook(black_color, (0, 0), "./pieces_images/black-rook.png", controller)
-    black_knight1 = Knight(black_color, (100, 0), "./pieces_images/black-knight.png", controller)
-    black_bishop1 = Bishop(black_color, (200, 0), "./pieces_images/black-bishop.png", controller)
-    black_queen = Queen(black_color, (300, 0), "./pieces_images/black-queen.png", controller)
-    black_king = King(black_color, (400, 0), "./pieces_images/black-king.png", controller)
-    black_bishop2 = Bishop(black_color, (500, 0), "./pieces_images/black-bishop.png", controller)
-    black_knight2 = Knight(black_color, (600, 0), "./pieces_images/black-knight.png", controller)
-    black_rook2 = Rook(black_color, (700, 0), "./pieces_images/black-rook.png", controller)
+    black_knight1 = Knight(black_color, (1, 0), "./pieces_images/black-knight.png", controller)
+    black_bishop1 = Bishop(black_color, (2, 0), "./pieces_images/black-bishop.png", controller)
+    black_queen = Queen(black_color, (3, 0), "./pieces_images/black-queen.png", controller)
+    black_king = King(black_color, (4, 0), "./pieces_images/black-king.png", controller)
+    black_bishop2 = Bishop(black_color, (5, 0), "./pieces_images/black-bishop.png", controller)
+    black_knight2 = Knight(black_color, (6, 0), "./pieces_images/black-knight.png", controller)
+    black_rook2 = Rook(black_color, (7, 0), "./pieces_images/black-rook.png", controller)
     black_pieces.extend([black_rook1, black_knight1, black_bishop1, black_queen, black_king, black_bishop2, black_knight2, black_rook2])
     return white_pieces, black_pieces
 
