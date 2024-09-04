@@ -53,7 +53,7 @@ class Game:
                 if self.piece:
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.get_position()
-                        if self.pos in self.piece.move_options(self.white_pieces, self.black_pieces, self.turn):
+                        if self.pos in self.piece.move_options(self.white_pieces, self.black_pieces):
                             self.piece_captured()
                             self.piece.move(self.pos)
                             self.turn = 'black' if self.turn == 'white' else 'white'

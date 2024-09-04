@@ -20,10 +20,10 @@ class Piece():
     def move(self, new_position):
         self.position = new_position
 
-    def whose_pieces(self, white_pieces, black_pieces, turn):
+    def whose_pieces(self, white_pieces, black_pieces):
         self.capturable_pieces_positions = []
         self.own_pieces_positions = []
-        if turn == 'white':
+        if self.whose_piece == 'white':
             for black_piece in black_pieces:
                 self.capturable_pieces_positions.append(black_piece.position)
             for white_piece in white_pieces:

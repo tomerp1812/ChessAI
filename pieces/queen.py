@@ -4,9 +4,9 @@ class Queen(Piece):
     def __init__(self, color, position, image, controller):
         super().__init__(color, position, image, controller)
 
-    def move_options(self, white_pieces, black_pieces, turn):
+    def move_options(self, white_pieces, black_pieces):
         self.optional_moves = []
-        self.whose_pieces(white_pieces, black_pieces, turn)
+        self.whose_pieces(white_pieces, black_pieces)
         up = True
         down = True
         left = True
