@@ -14,12 +14,34 @@ class Game:
         self.running = True
         self.pos = None
         self.piece = None
+        self.turn = 'white'
 
     def get_position(self):
         self.pos = self.controller.pygame.mouse.get_pos()
         index_x = self.pos[0] // 100
         index_y = self.pos[1] // 100
         self.pos = (index_x, index_y)
+
+    def update_board(self):
+        self.controller.screen.fill('saddlebrown')
+        self.board.draw_board()
+        for piece in self.white_pieces:
+            piece.draw_piece()
+        for piece in self.black_pieces:
+            piece.draw_piece()
+        self.controller.pygame.display.flip()
+
+    def piece_captured(self):
+        if self.turn == 'white':
+            for black_piece in self.black_pieces:
+                if self.pos == black_piece.position:
+                    self.black_pieces.remove(black_piece)
+                    break
+        else:
+            for white_piece in self.white_pieces:
+                if self.pos == white_piece.position:
+                    self.white_pieces.remove(white_piece)
+                    break
 
     def run_game(self):
         while self.running:
@@ -31,35 +53,33 @@ class Game:
                 if self.piece:
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.get_position()
-                        if self.pos in self.piece.move_options():
+                        if self.pos in self.piece.move_options(self.white_pieces, self.black_pieces, self.turn):
+                            self.piece_captured()
                             self.piece.move(self.pos)
+                            self.turn = 'black' if self.turn == 'white' else 'white'
                         self.piece = None
                 else:
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.get_position()
                         self.piece = self.piece_selected()
+                self.update_board()
                 
-                self.controller.screen.fill('saddlebrown')
-                self.board.draw_board()
-                for piece in self.white_pieces:
-                    piece.draw_piece()
-                for piece in self.black_pieces:
-                    piece.draw_piece()
-                self.controller.pygame.display.flip()
 
     def piece_selected(self):
         index_x = self.pos[0]
         index_y = self.pos[1]
-        for white_piece in self.white_pieces:
-            white_piece_x = white_piece.position[0]
-            white_piece_y = white_piece.position[1]
-            if index_x == white_piece_x and index_y == white_piece_y:
-                return white_piece
-        for black_piece in self.black_pieces:
-            black_piece_x = black_piece.position[0]
-            black_piece_y = black_piece.position[1]
-            if index_x == black_piece_x and index_y == black_piece_y:
-                return black_piece
+        if self.turn == 'white':
+            for white_piece in self.white_pieces:
+                white_piece_x = white_piece.position[0]
+                white_piece_y = white_piece.position[1]
+                if index_x == white_piece_x and index_y == white_piece_y:
+                    return white_piece
+        else:
+            for black_piece in self.black_pieces:
+                black_piece_x = black_piece.position[0]
+                black_piece_y = black_piece.position[1]
+                if index_x == black_piece_x and index_y == black_piece_y:
+                    return black_piece
         return None    
     
     

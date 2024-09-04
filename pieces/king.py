@@ -4,21 +4,17 @@ class King(Piece):
     def __init__(self, color, position, image, controller):
         super().__init__(color, position, image, controller)
     
-    def move_options(self):
-        first_iter = []
-        first_iter.append((self.position[0] + 1, self.position[1]))
-        first_iter.append((self.position[0] - 1, self.position[1]))
-        first_iter.append((self.position[0], self.position[1] + 1))
-        first_iter.append((self.position[0], self.position[1] - 1))
-        first_iter.append((self.position[0] + 1, self.position[1] + 1))
-        first_iter.append((self.position[0] - 1, self.position[1] - 1))
-        first_iter.append((self.position[0] + 1, self.position[1] - 1))
-        first_iter.append((self.position[0] - 1, self.position[1] + 1))
+    def move_options(self, white_pieces, black_pieces, turn):
+        self.optional_moves = []
+        self.whose_pieces(white_pieces, black_pieces, turn)
+        self.check_move(True, (self.position[0] + 1, self.position[1]))
+        self.check_move(True, (self.position[0] + 1, self.position[1] + 1))
+        self.check_move(True, (self.position[0], self.position[1] + 1))
+        self.check_move(True, (self.position[0] - 1, self.position[1] + 1))
+        self.check_move(True, (self.position[0] - 1, self.position[1]))
+        self.check_move(True, (self.position[0] - 1, self.position[1] - 1))
+        self.check_move(True, (self.position[0], self.position[1] - 1))
+        self.check_move(True, (self.position[0] + 1, self.position[1] - 1))
 
-        second_iter = []
-        for option in first_iter:
-            if 0 <= option[0] <= 7 and 0 <= option[1] <= 7:
-                second_iter.append(option)
-
-        return second_iter
+        return self.optional_moves
 

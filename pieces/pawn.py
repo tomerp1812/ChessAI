@@ -4,7 +4,7 @@ class Pawn(Piece):
     def __init__(self, color, position, image, controller):
         super().__init__(color, position, image, controller)
 
-    def move_options(self):
+    def move_options(self, white_pieces, black_pieces, turn):
         optional_moves = []
         if self.whose_piece == "white":
             ## if pawn is at starting position, it can move 2 spaces
