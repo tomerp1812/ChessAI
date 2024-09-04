@@ -2,7 +2,12 @@ from pieces.piece import Piece
 
 class Rook(Piece):
     def __init__(self, color, position, image, controller):
+        self.rook_first_move = True
         super().__init__(color, position, image, controller)
+
+    def move(self, new_position):
+        self.rook_first_move = False
+        super().move(new_position)
 
     def move_options(self, white_pieces, black_pieces):
         self.optional_moves = []

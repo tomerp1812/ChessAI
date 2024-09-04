@@ -10,7 +10,6 @@ class Game:
         self.controller = controller
         self.board = board
         self.white_pieces, self.black_pieces = self.pieces_creator()
-        self.piece_picked = False
         self.running = True
         self.pos = None
         self.piece = None
@@ -29,6 +28,10 @@ class Game:
             piece.draw_piece()
         for piece in self.black_pieces:
             piece.draw_piece()
+        if self.piece:
+            for optional_positions in self.piece.move_options(self.white_pieces, self.black_pieces):
+                self.controller.pygame.draw.circle(self.controller.screen, 'red',
+                    (optional_positions[0] * 100 + 50, optional_positions[1] * 100 + 50), 10)
         self.controller.pygame.display.flip()
 
     def piece_captured(self):
@@ -103,6 +106,8 @@ class Game:
         bishop2 = Bishop(white_color, (5, 7), "./pieces_images/white-bishop.png", self.controller)
         knight2 = Knight(white_color, (6, 7), "./pieces_images/white-knight.png", self.controller)
         rook2 = Rook(white_color, (7, 7), "./pieces_images/white-rook.png", self.controller)
+        king.my_rooks(rook1, "long")
+        king.my_rooks(rook2, "short")
         white_pieces.extend([rook1, knight1, bishop1, queen, king, bishop2, knight2, rook2])
 
         for i in range(8):
@@ -118,5 +123,8 @@ class Game:
         black_bishop2 = Bishop(black_color, (5, 0), "./pieces_images/black-bishop.png", self.controller)
         black_knight2 = Knight(black_color, (6, 0), "./pieces_images/black-knight.png", self.controller)
         black_rook2 = Rook(black_color, (7, 0), "./pieces_images/black-rook.png", self.controller)
+        ## assosiate king to the rooks for casteling
+        black_king.my_rooks(black_rook1, "long")
+        black_king.my_rooks(black_rook2, "short")
         black_pieces.extend([black_rook1, black_knight1, black_bishop1, black_queen, black_king, black_bishop2, black_knight2, black_rook2])
         return white_pieces, black_pieces
