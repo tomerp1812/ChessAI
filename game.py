@@ -1,9 +1,9 @@
 from pieces.pawn import Pawn
-from pieces.rook import Rook
-from pieces.knight import Knight
 from pieces.bishop import Bishop
-from pieces.queen import Queen
 from pieces.king import King
+from pieces.queen import Queen
+from pieces.knight import Knight
+from pieces.rook import Rook
 
 class Game:
     def __init__(self, controller, board):
@@ -26,10 +26,15 @@ class Game:
         self.board.draw_board()
         for piece in self.white_pieces:
             piece.draw_piece()
+            # if self.turn == 'white':
+            piece.move_options(self.white_pieces, self.black_pieces)
         for piece in self.black_pieces:
             piece.draw_piece()
+            # if self.turn == 'black':
+            piece.move_options(self.white_pieces, self.black_pieces)
+            
         if self.piece:
-            for optional_positions in self.piece.move_options(self.white_pieces, self.black_pieces):
+            for optional_positions in self.piece.optional_moves:
                 self.controller.pygame.draw.circle(self.controller.screen, 'red',
                     (optional_positions[0] * 100 + 50, optional_positions[1] * 100 + 50), 10)
         self.controller.pygame.display.flip()
@@ -49,6 +54,7 @@ class Game:
     def run_game(self):
         while self.running:
             for event in self.controller.pygame.event.get():
+                self.update_board()
                 ## check if the user wants to quit the game
                 if event.type == self.controller.pygame.QUIT:
                     self.running = False
@@ -56,7 +62,7 @@ class Game:
                 if self.piece:
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.get_position()
-                        if self.pos in self.piece.move_options(self.white_pieces, self.black_pieces):
+                        if self.pos in self.piece.optional_moves:
                             self.piece_captured()
                             self.piece.move(self.pos)
                             self.turn = 'black' if self.turn == 'white' else 'white'
@@ -65,7 +71,6 @@ class Game:
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.get_position()
                         self.piece = self.piece_selected()
-                self.update_board()
                 
 
     def piece_selected(self):
@@ -127,4 +132,11 @@ class Game:
         black_king.my_rooks(black_rook1, "long")
         black_king.my_rooks(black_rook2, "short")
         black_pieces.extend([black_rook1, black_knight1, black_bishop1, black_queen, black_king, black_bishop2, black_knight2, black_rook2])
+
+        for white_piece in white_pieces:
+            white_piece.init_my_king(king)
+            white_piece.init_opponent_king(black_king)
+        for black_piece in black_pieces:
+            black_piece.init_my_king(black_king)
+            black_piece.init_opponent_king(king)
         return white_pieces, black_pieces

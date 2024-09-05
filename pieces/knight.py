@@ -8,13 +8,13 @@ class Knight(Piece):
         self.optional_moves = []
         self.whose_pieces(white_pieces, black_pieces)
 
-        self.check_move(True, (self.position[0] + 1, self.position[1] + 2))
-        self.check_move(True, (self.position[0] + 2, self.position[1] + 1))
-        self.check_move(True, (self.position[0] + 2, self.position[1] - 1))
-        self.check_move(True, (self.position[0] + 1, self.position[1] - 2))
-        self.check_move(True, (self.position[0] - 1, self.position[1] - 2))
-        self.check_move(True, (self.position[0] - 2, self.position[1] - 1))
-        self.check_move(True, (self.position[0] - 2, self.position[1] + 1))
-        self.check_move(True, (self.position[0] - 1, self.position[1] + 2))
+        self.check_move(True, (self.position[0] + 1, self.position[1] + 2), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] + 2, self.position[1] + 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] + 2, self.position[1] - 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] + 1, self.position[1] - 2), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 1, self.position[1] - 2), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 2, self.position[1] - 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 2, self.position[1] + 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 1, self.position[1] + 2), white_pieces, black_pieces)
 
         return self.optional_moves

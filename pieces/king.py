@@ -23,14 +23,14 @@ class King(Piece):
     def move_options(self, white_pieces, black_pieces):
         self.optional_moves = []
         self.whose_pieces(white_pieces, black_pieces)
-        self.check_move(True, (self.position[0] + 1, self.position[1]))
-        self.check_move(True, (self.position[0] + 1, self.position[1] + 1))
-        self.check_move(True, (self.position[0], self.position[1] + 1))
-        self.check_move(True, (self.position[0] - 1, self.position[1] + 1))
-        self.check_move(True, (self.position[0] - 1, self.position[1]))
-        self.check_move(True, (self.position[0] - 1, self.position[1] - 1))
-        self.check_move(True, (self.position[0], self.position[1] - 1))
-        self.check_move(True, (self.position[0] + 1, self.position[1] - 1))
+        self.check_move(True, (self.position[0] + 1, self.position[1]), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] + 1, self.position[1] + 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0], self.position[1] + 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 1, self.position[1] + 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 1, self.position[1]), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] - 1, self.position[1] - 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0], self.position[1] - 1), white_pieces, black_pieces)
+        self.check_move(True, (self.position[0] + 1, self.position[1] - 1), white_pieces, black_pieces)
 
         if self.king_first_move and self.my_rooks_dictionary["long"].rook_first_move:
             long_castle = True

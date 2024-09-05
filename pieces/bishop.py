@@ -18,9 +18,9 @@ class Bishop(Piece):
             down_right_position = self.position[0] - i, self.position[1] + i
             down_left_position = self.position[0] - i, self.position[1] - i
 
-            up_right = self.check_move(up_right, up_right_position)
-            up_left = self.check_move(up_left, up_left_position)
-            down_right = self.check_move(down_right, down_right_position)
-            down_left = self.check_move(down_left, down_left_position)
+            up_right = self.check_move(up_right, up_right_position, white_pieces, black_pieces)
+            up_left = self.check_move(up_left, up_left_position, white_pieces, black_pieces)
+            down_right = self.check_move(down_right, down_right_position, white_pieces, black_pieces)
+            down_left = self.check_move(down_left, down_left_position, white_pieces, black_pieces)
             
         return self.optional_moves

@@ -23,9 +23,9 @@ class Rook(Piece):
             right_position = self.position[0], self.position[1] + i
             left_position = self.position[0], self.position[1] - i
 
-            up = self.check_move(up, up_position)
-            down = self.check_move(down, down_position)
-            right = self.check_move(right, right_position)
-            left = self.check_move(left, left_position)
+            up = self.check_move(up, up_position, white_pieces, black_pieces)
+            down = self.check_move(down, down_position, white_pieces, black_pieces)
+            right = self.check_move(right, right_position, white_pieces, black_pieces)
+            left = self.check_move(left, left_position, white_pieces, black_pieces)
             
         return self.optional_moves
