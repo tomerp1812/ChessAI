@@ -4,7 +4,7 @@ class Knight(Piece):
     def __init__(self, color, position, image, controller):
         super().__init__(color, position, image, controller)
 
-    def move_options(self, white_pieces, black_pieces):
+    def move_options(self, white_pieces, black_pieces, last_move):
         self.optional_moves = []
         self.whose_pieces(white_pieces, black_pieces)
 

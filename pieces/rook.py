@@ -9,7 +9,7 @@ class Rook(Piece):
         self.rook_first_move = False
         super().move(new_position)
 
-    def move_options(self, white_pieces, black_pieces):
+    def move_options(self, white_pieces, black_pieces, last_move):
         self.optional_moves = []
         self.whose_pieces(white_pieces, black_pieces)
         up = True

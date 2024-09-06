@@ -40,6 +40,8 @@ def am_i_in_check(my_king_position, own_pieces_positions, opponent_pieces, whose
     
     for position in knight_positions:
         knight_new_position = my_king_position[0] + position[0], my_king_position[1] + position[1]
+        if knight_new_position in own_pieces_positions:
+            continue
         for piece in opponent_pieces:
             if piece.position == knight_new_position and type(piece) == Knight:
                 return True
