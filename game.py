@@ -17,23 +17,63 @@ class Game:
         self.turn = "white"
         self.last_move = None
 
+    def init_white_king(self, king):
+        self.white_king = king
+    
+    def init_black_king(self, king):
+        self.black_king = king
+    
     def get_position(self):
         self.pos = self.controller.pygame.mouse.get_pos()
         index_x = self.pos[0] // 100
         index_y = self.pos[1] // 100
         self.pos = (index_x, index_y)
 
+    def game_over(self):
+        game_over = True
+        for white_piece in self.white_pieces:
+            if white_piece.optional_moves:
+                game_over = False
+                break
+        if game_over:
+            for black_piece in self.black_pieces:
+                if self.white_king.position in black_piece.optional_moves:
+                    print("Black wins on checkmate")
+                    self.running = False 
+                    return True
+            print("It's a draw")
+            self.running = False
+            return True
+
+        game_over = True
+        for black_piece in self.black_pieces:
+            if black_piece.optional_moves:
+                game_over = False
+                break
+        if game_over:
+            for white_piece in self.white_pieces:
+                if self.black_king.position in white_piece.optional_moves:
+                    print("White wins on checkmate")
+                    self.running = False
+                    return True
+            print("It's a draw")
+            self.running = False
+            return True
+        return False
+            
     def update_board(self):
         self.controller.screen.fill("saddlebrown")
         self.board.draw_board()
         for piece in self.white_pieces:
             piece.draw_piece()
-            # if self.turn == 'white':
             piece.move_options(self.white_pieces, self.black_pieces, self.last_move)
+            
         for piece in self.black_pieces:
             piece.draw_piece()
-            # if self.turn == 'black':
             piece.move_options(self.white_pieces, self.black_pieces, self.last_move)
+            
+        if self.game_over():
+            return
 
         if self.piece:
             for optional_positions in self.piece.optional_moves:
@@ -248,4 +288,7 @@ class Game:
         for black_piece in black_pieces:
             black_piece.init_my_king(black_king)
             black_piece.init_opponent_king(king)
+        
+        self.init_white_king(king)
+        self.init_black_king(black_king)
         return white_pieces, black_pieces
