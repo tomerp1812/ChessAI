@@ -7,6 +7,9 @@ class King(Piece):
         self.king_first_move = True
         self.my_rooks_dictionary = {}
         super().__init__(color, position, image, controller)
+        
+    def type_to_string(self):
+        return "King"
 
     def my_rooks(self, rook, short_or_long):
         self.my_rooks_dictionary[short_or_long] = rook

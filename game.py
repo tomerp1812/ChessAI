@@ -95,7 +95,7 @@ class Game:
                     self.black_pieces.remove(black_piece)
                     return
             if (
-                type(self.last_move[0]) == Pawn
+                self.last_move[0].type_to_string() == "Pawn"
                 and self.last_move[1][1] == 3
                 and self.last_move[2][1] == 2
                 and abs(self.last_move[2][0] - self.last_move[1][0]) == 1
@@ -110,7 +110,7 @@ class Game:
                     self.white_pieces.remove(white_piece)
                     return
             if (
-                type(self.last_move[0]) == Pawn
+                self.last_move[0].type_to_string() == "Pawn"
                 and self.last_move[1][1] == 4
                 and self.last_move[2][1] == 5
                 and abs(self.last_move[2][0] - self.last_move[1][0]) == 1
@@ -121,7 +121,7 @@ class Game:
                         return
 
     def promotion(self):
-        if type(self.last_move[0]) == Pawn:
+        if self.last_move[0].type_to_string() == "Pawn":
             if self.turn == "white":
                 if self.last_move[2][1] == 0:
                     for white_piece in self.white_pieces:
@@ -130,10 +130,10 @@ class Game:
                             q = Queen(self.controller.pygame.Color(255, 255, 255), self.last_move[2], "./pieces_images/white-queen.png", self.controller)
                             self.white_pieces.append(q)
                             for piece in self.white_pieces:
-                                if type(piece) == King:
+                                if piece.type_to_string() == "King":
                                     q.init_my_king(piece)
                             for piece in self.black_pieces:
-                                if type(piece) == King:
+                                if piece.type_to_string() == "King":
                                     q.init_opponent_king(piece)
                             return True
             else:
@@ -144,10 +144,10 @@ class Game:
                             q = Queen(self.controller.pygame.Color(0, 0, 0), self.last_move[2], "./pieces_images/black-queen.png", self.controller)
                             self.black_pieces.append(q)
                             for piece in self.black_pieces:
-                                if type(piece) == King:
+                                if piece.type_to_string() == "King":
                                     q.init_my_king(piece)
                             for piece in self.white_pieces:
-                                if type(piece) == King:
+                                if piece.type_to_string() == "King":
                                     q.init_opponent_king(piece)
                             return True
         return False
