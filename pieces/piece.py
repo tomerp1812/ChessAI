@@ -15,6 +15,9 @@ class Piece:
         self.own_pieces_positions = []
         self.capturable_pieces_positions = []
 
+    def __eq__(self, other):
+        return self.position == other.position
+    
     def init_my_king(self, my_king):
         self.my_king = my_king
 
@@ -64,3 +67,4 @@ class Piece:
                     return False
                 return True
         return False
+
