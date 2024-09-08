@@ -9,7 +9,7 @@ class Piece:
         else:
             self.whose_piece = "black"
         self.position = position
-        self.image = self.controller.pygame.image.load(image)
+        self.image = image
         self.image = self.controller.pygame.transform.scale(self.image, (100, 100))
         self.optional_moves = []
         self.own_pieces_positions = []

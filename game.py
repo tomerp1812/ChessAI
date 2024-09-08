@@ -4,12 +4,18 @@ from pieces.king import King
 from pieces.queen import Queen
 from pieces.knight import Knight
 from pieces.rook import Rook
+import time
 
 
 class Game:
     def __init__(self, controller, board):
         self.controller = controller
         self.board = board
+        self.white_pieces = []
+        self.black_pieces = []
+        self.state = []
+        self.fifty_move_rule = 0
+        self.game_history = {}
         self.pieces_creator()
         self.running = True
         self.pos = None
@@ -82,7 +88,7 @@ class Game:
             for black_piece in self.black_pieces:
                 if self.pos == black_piece.position:
                     self.black_pieces.remove(black_piece)
-                    return
+                    return True
             if (
                 self.last_move[0].type_to_string() == "Pawn"
                 and self.last_move[1][1] == 3
@@ -92,12 +98,12 @@ class Game:
                 for black_piece in self.black_pieces:
                     if black_piece.position == (self.last_move[2][0], 3):
                         self.black_pieces.remove(black_piece)
-                        return
+                        return True
         else:
             for white_piece in self.white_pieces:
                 if self.pos == white_piece.position:
                     self.white_pieces.remove(white_piece)
-                    return
+                    return True
             if (
                 self.last_move[0].type_to_string() == "Pawn"
                 and self.last_move[1][1] == 4
@@ -107,7 +113,46 @@ class Game:
                 for white_piece in self.white_pieces:
                     if white_piece.position == (self.last_move[2][0], 4):
                         self.white_pieces.remove(white_piece)
-                        return
+                        return True
+        return False
+
+    def show_promotion_options(self, rgb, color):
+        self.running_promotion = True
+        self.controller.screen.fill("black")
+        while self.running_promotion:
+            for event in self.controller.pygame.event.get():
+                self.board.draw_promotion_options(self.piece.whose_piece)
+                self.controller.pygame.display.flip()
+                if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
+                    clicked_pos = self.controller.pygame.mouse.get_pos()
+                    if clicked_pos[0] < 390 and clicked_pos[1] < 390:
+                        return Queen(
+                            self.controller.pygame.Color(rgb),
+                            self.last_move[2],
+                            self.controller.images[color + "_queen"],
+                            self.controller,
+                        )
+                    elif clicked_pos[0] > 400 and clicked_pos[1] < 390:
+                        return Rook(
+                            self.controller.pygame.Color(rgb),
+                            self.last_move[2],
+                            self.controller.images[color + "_rook"],
+                            self.controller,
+                        )
+                    elif clicked_pos[0] < 390 and clicked_pos[1] > 400:
+                        return Bishop(
+                            self.controller.pygame.Color(rgb),
+                            self.last_move[2],
+                            self.controller.images[color + "_bishop"],
+                            self.controller,
+                        )
+                    elif clicked_pos[0] > 400 and clicked_pos[1] > 400:
+                        return Knight(
+                            self.controller.pygame.Color(rgb),
+                            self.last_move[2],
+                            self.controller.images[color + "_knight"],
+                            self.controller,
+                        )
 
     def promotion(self):
         if self.last_move[0].type_to_string() == "Pawn":
@@ -116,39 +161,61 @@ class Game:
                     for white_piece in self.white_pieces:
                         if white_piece.position == self.last_move[1]:
                             self.white_pieces.remove(white_piece)
-                            q = Queen(
-                                self.controller.pygame.Color(255, 255, 255),
-                                self.last_move[2],
-                                "./pieces_images/white-queen.png",
-                                self.controller,
-                            )
-                            self.white_pieces.append(q)
+                            new_piece = self.show_promotion_options((255, 255, 255), "white")
+                            self.white_pieces.append(new_piece)
                             for piece in self.white_pieces:
                                 if piece.type_to_string() == "King":
-                                    q.init_my_king(piece)
+                                    new_piece.init_my_king(piece)
                             for piece in self.black_pieces:
                                 if piece.type_to_string() == "King":
-                                    q.init_opponent_king(piece)
+                                    new_piece.init_opponent_king(piece)
                             return True
             else:
                 if self.last_move[2][1] == 7:
                     for black_piece in self.black_pieces:
                         if black_piece.position == self.last_move[1]:
                             self.black_pieces.remove(black_piece)
-                            q = Queen(
-                                self.controller.pygame.Color(0, 0, 0),
-                                self.last_move[2],
-                                "./pieces_images/black-queen.png",
-                                self.controller,
-                            )
-                            self.black_pieces.append(q)
+                            new_piece = self.show_promotion_options((0, 0, 0), "black")
+                            self.black_pieces.append(new_piece)
                             for piece in self.black_pieces:
                                 if piece.type_to_string() == "King":
-                                    q.init_my_king(piece)
+                                    new_piece.init_my_king(piece)
                             for piece in self.white_pieces:
                                 if piece.type_to_string() == "King":
-                                    q.init_opponent_king(piece)
+                                    new_piece.init_opponent_king(piece)
                             return True
+        return False
+
+    def compare(self, e):
+        return e[0], e[1]
+
+    def update_state(self):
+        self.state = []
+        for white_piece in self.white_pieces:
+            self.state.append(
+                (
+                    white_piece.position,
+                    white_piece.whose_piece + " " + white_piece.type_to_string(),
+                )
+            )
+        for black_piece in self.black_pieces:
+            self.state.append(
+                (
+                    black_piece.position,
+                    black_piece.whose_piece + " " + black_piece.type_to_string(),
+                )
+            )
+        self.state.sort(key=self.compare)
+
+    def threefold_repetition(self):
+        if tuple(self.state) in self.game_history:
+            self.game_history[tuple(self.state)] += 1
+            if self.game_history[tuple(self.state)] == 3:
+                print("It's a draw, threefold repetition")
+                self.running = False
+                return True
+        else:
+            self.game_history[tuple(self.state)] = 1
         return False
 
     def run_game(self):
@@ -164,9 +231,22 @@ class Game:
                         self.get_position()
                         if self.pos in self.piece.optional_moves:
                             self.last_move = self.piece, self.piece.position, self.pos
-                            self.piece_captured()
-                            if not self.promotion():
+                            capture = self.piece_captured()
+                            promotion = self.promotion()
+                            if not promotion:
                                 self.piece.move(self.pos)
+                            self.update_state()
+                            if self.threefold_repetition():
+                                break
+                            if self.piece.type_to_string() == "Pawn" or capture:
+                                self.fifty_move_rule = 0
+                            else:
+                                self.fifty_move_rule += 1
+                            ## counting for both players, 50 moves means each player moved 50 times, so 100 moves in total
+                            if self.fifty_move_rule == 100:
+                                print("It's a draw, fifty move rule")
+                                self.running = False
+                                break
                             self.turn = "black" if self.turn == "white" else "white"
                         self.piece = None
                 else:
@@ -192,41 +272,42 @@ class Game:
         return None
 
     def pieces_creator(self):
-        self.white_pieces = []
-        self.black_pieces = []
         white_color = self.controller.pygame.Color(255, 255, 255)
         black_color = self.controller.pygame.Color(0, 0, 0)
-        
+
         for i in range(8):
             # create white pawns
             position = (i, 6)
             pawn = Pawn(
-                white_color, position, "./pieces_images/white-pawn.png", self.controller
+                white_color,
+                position,
+                self.controller.images["white_pawn"],
+                self.controller,
             )
             self.white_pieces.append(pawn)
         rook1 = Rook(
-            white_color, (0, 7), "./pieces_images/white-rook.png", self.controller
+            white_color, (0, 7), self.controller.images["white_rook"], self.controller
         )
         knight1 = Knight(
-            white_color, (1, 7), "./pieces_images/white-knight.png", self.controller
+            white_color, (1, 7), self.controller.images["white_knight"], self.controller
         )
         bishop1 = Bishop(
-            white_color, (2, 7), "./pieces_images/white-bishop.png", self.controller
+            white_color, (2, 7), self.controller.images["white_bishop"], self.controller
         )
         queen = Queen(
-            white_color, (3, 7), "./pieces_images/white-queen.png", self.controller
+            white_color, (3, 7), self.controller.images["white_queen"], self.controller
         )
         king = King(
-            white_color, (4, 7), "./pieces_images/white-king.png", self.controller
+            white_color, (4, 7), self.controller.images["white_king"], self.controller
         )
         bishop2 = Bishop(
-            white_color, (5, 7), "./pieces_images/white-bishop.png", self.controller
+            white_color, (5, 7), self.controller.images["white_bishop"], self.controller
         )
         knight2 = Knight(
-            white_color, (6, 7), "./pieces_images/white-knight.png", self.controller
+            white_color, (6, 7), self.controller.images["white_knight"], self.controller
         )
         rook2 = Rook(
-            white_color, (7, 7), "./pieces_images/white-rook.png", self.controller
+            white_color, (7, 7), self.controller.images["white_rook"], self.controller
         )
         king.my_rooks(rook1, "long")
         king.my_rooks(rook2, "short")
@@ -238,33 +319,36 @@ class Game:
             # create black pawns
             position = (i, 1)
             pawn = Pawn(
-                black_color, position, "./pieces_images/black-pawn.png", self.controller
+                black_color,
+                position,
+                self.controller.images["black_pawn"],
+                self.controller,
             )
             self.black_pieces.append(pawn)
 
         black_rook1 = Rook(
-            black_color, (0, 0), "./pieces_images/black-rook.png", self.controller
+            black_color, (0, 0), self.controller.images["black_rook"], self.controller
         )
         black_knight1 = Knight(
-            black_color, (1, 0), "./pieces_images/black-knight.png", self.controller
+            black_color, (1, 0), self.controller.images["black_knight"], self.controller
         )
         black_bishop1 = Bishop(
-            black_color, (2, 0), "./pieces_images/black-bishop.png", self.controller
+            black_color, (2, 0), self.controller.images["black_bishop"], self.controller
         )
         black_queen = Queen(
-            black_color, (3, 0), "./pieces_images/black-queen.png", self.controller
+            black_color, (3, 0), self.controller.images["black_queen"], self.controller
         )
         black_king = King(
-            black_color, (4, 0), "./pieces_images/black-king.png", self.controller
+            black_color, (4, 0), self.controller.images["black_king"], self.controller
         )
         black_bishop2 = Bishop(
-            black_color, (5, 0), "./pieces_images/black-bishop.png", self.controller
+            black_color, (5, 0), self.controller.images["black_bishop"], self.controller
         )
         black_knight2 = Knight(
-            black_color, (6, 0), "./pieces_images/black-knight.png", self.controller
+            black_color, (6, 0), self.controller.images["black_knight"], self.controller
         )
         black_rook2 = Rook(
-            black_color, (7, 0), "./pieces_images/black-rook.png", self.controller
+            black_color, (7, 0), self.controller.images["black_rook"], self.controller
         )
         ## assosiate king to the rooks for casteling
         black_king.my_rooks(black_rook1, "long")
@@ -288,6 +372,8 @@ class Game:
         for black_piece in self.black_pieces:
             black_piece.init_my_king(black_king)
             black_piece.init_opponent_king(king)
-                
+
+        self.update_state()
+        self.game_history[tuple(self.state)] = 1
         self.init_white_king(king)
         self.init_black_king(black_king)
