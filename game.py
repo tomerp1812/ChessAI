@@ -186,27 +186,6 @@ class Game:
                             return True
         return False
 
-    def compare(self, e):
-        return e[0], e[1]
-
-    def update_state(self):
-        self.state = []
-        for white_piece in self.white_pieces:
-            self.state.append(
-                (
-                    white_piece.position,
-                    white_piece.whose_piece + " " + white_piece.type_to_string(),
-                )
-            )
-        for black_piece in self.black_pieces:
-            self.state.append(
-                (
-                    black_piece.position,
-                    black_piece.whose_piece + " " + black_piece.type_to_string(),
-                )
-            )
-        self.state.sort(key=self.compare)
-
     def threefold_repetition(self):
         if tuple(self.state) in self.game_history:
             self.game_history[tuple(self.state)] += 1
@@ -217,6 +196,25 @@ class Game:
         else:
             self.game_history[tuple(self.state)] = 1
         return False
+
+    def update_state(self, promotion, capture):
+        if capture:
+            for i in range(len(self.state)):
+                if self.state[i][0] == self.pos:
+                    self.state.pop(i)
+                    break
+        
+        self.state.pop(self.state.index((self.last_move[1], self.piece.whose_piece + " " + self.piece.type_to_string())))
+        if promotion:
+            for i in range(len(self.state)):
+                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] > self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
+                    self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.white_pieces[-1].type_to_string()))
+                    break
+        else:
+            for i in range(len(self.state)):
+                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] > self.pos[1]) or self.state[i][0][0] > self.pos[0]:
+                    self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
+                    break
 
     def run_game(self):
         while self.running:
@@ -235,7 +233,7 @@ class Game:
                             promotion = self.promotion()
                             if not promotion:
                                 self.piece.move(self.pos)
-                            self.update_state()
+                            self.update_state(promotion, capture)
                             if self.threefold_repetition():
                                 break
                             if self.piece.type_to_string() == "Pawn" or capture:
@@ -271,6 +269,27 @@ class Game:
                     return black_piece
         return None
 
+    def compare(self, e):
+        return e[0][0], e[0][1]
+
+    def init_state(self):
+        self.state = []
+        for white_piece in self.white_pieces:
+            self.state.append(
+                (
+                    white_piece.position,
+                    white_piece.whose_piece + " " + white_piece.type_to_string(),
+                )
+            )
+        for black_piece in self.black_pieces:
+            self.state.append(
+                (
+                    black_piece.position,
+                    black_piece.whose_piece + " " + black_piece.type_to_string(),
+                )
+            )
+        self.state.sort(key=self.compare)
+        
     def pieces_creator(self):
         white_color = self.controller.pygame.Color(255, 255, 255)
         black_color = self.controller.pygame.Color(0, 0, 0)
@@ -373,7 +392,7 @@ class Game:
             black_piece.init_my_king(black_king)
             black_piece.init_opponent_king(king)
 
-        self.update_state()
+        self.init_state()
         self.game_history[tuple(self.state)] = 1
         self.init_white_king(king)
         self.init_black_king(black_king)
