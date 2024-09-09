@@ -37,17 +37,17 @@ class Pawn(Piece):
         self.optional_moves = []
         self.whose_pieces(white_pieces, black_pieces)
         if self.whose_piece == "white":
-            ## if pawn is at starting position, it can move 2 spaces
-            if self.position[1] == 6:
-                self.check_pawn_move((self.position[0], self.position[1] - 2), white_pieces, black_pieces)
             self.check_pawn_move((self.position[0], self.position[1] - 1), white_pieces, black_pieces)
+            ## if pawn is at starting position, it can move 2 spaces
+            if self.position[1] == 6 and (self.position[0], self.position[1] - 1) in self.optional_moves:
+                self.check_pawn_move((self.position[0], self.position[1] - 2), white_pieces, black_pieces)
             self.check_capturing((self.position[0] + 1, self.position[1] - 1), white_pieces, black_pieces)
             self.check_capturing((self.position[0] - 1, self.position[1] - 1), white_pieces, black_pieces)
             self.an_passant(last_move, black_pieces, (1, 2, 3))
         else:
-            if self.position[1] == 1:
-                self.check_pawn_move((self.position[0], self.position[1] + 2), white_pieces, black_pieces)
             self.check_pawn_move((self.position[0], self.position[1] + 1), white_pieces, black_pieces)
+            if self.position[1] == 1 and (self.position[0], self.position[1] + 1) in self.optional_moves:
+                self.check_pawn_move((self.position[0], self.position[1] + 2), white_pieces, black_pieces)
             self.check_capturing((self.position[0] + 1, self.position[1] + 1), white_pieces, black_pieces)
             self.check_capturing((self.position[0] - 1, self.position[1] + 1), white_pieces, black_pieces)
             self.an_passant(last_move, white_pieces, (6, 5, 4))

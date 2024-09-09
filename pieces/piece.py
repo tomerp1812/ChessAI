@@ -30,6 +30,8 @@ class Piece:
 
     def move(self, new_position):
         self.position = new_position
+        ## not castling
+        return None
 
     def whose_pieces(self, white_pieces, black_pieces):
         self.capturable_pieces_positions = []

@@ -17,7 +17,7 @@ class Game:
         self.fifty_move_rule = 0
         self.game_history = {}
         self.pieces_creator()
-        self.running = True
+        # self.running = True
         self.pos = None
         self.piece = None
         self.turn = "white"
@@ -45,10 +45,8 @@ class Game:
             for opponent_piece in opponent_pieces:
                 if my_king.position in opponent_piece.optional_moves:
                     print(color, "wins on checkmate")
-                    self.running = False
                     return True
             print("It's a draw")
-            self.running = False
             return True
         return False
 
@@ -68,7 +66,7 @@ class Game:
         ) or self.game_over(
             "Black", self.white_pieces, self.black_pieces, self.white_king
         ):
-            return
+            return False
 
         if self.piece:
             for optional_positions in self.piece.optional_moves:
@@ -82,12 +80,14 @@ class Game:
                     10,
                 )
         self.controller.pygame.display.flip()
-
+        return True
+            
     def piece_captured(self):
         if self.turn == "white":
             for black_piece in self.black_pieces:
                 if self.pos == black_piece.position:
                     self.black_pieces.remove(black_piece)
+                    self.state.pop(self.state.index((black_piece.position, black_piece.whose_piece + " " + black_piece.type_to_string())))
                     return True
             if (
                 self.last_move[0].type_to_string() == "Pawn"
@@ -98,11 +98,13 @@ class Game:
                 for black_piece in self.black_pieces:
                     if black_piece.position == (self.last_move[2][0], 3):
                         self.black_pieces.remove(black_piece)
+                        self.state.pop(self.state.index((black_piece.position, black_piece.whose_piece + " " + black_piece.type_to_string())))
                         return True
         else:
             for white_piece in self.white_pieces:
                 if self.pos == white_piece.position:
                     self.white_pieces.remove(white_piece)
+                    self.state.pop(self.state.index((white_piece.position, white_piece.whose_piece + " " + white_piece.type_to_string())))
                     return True
             if (
                 self.last_move[0].type_to_string() == "Pawn"
@@ -113,6 +115,7 @@ class Game:
                 for white_piece in self.white_pieces:
                     if white_piece.position == (self.last_move[2][0], 4):
                         self.white_pieces.remove(white_piece)
+                        self.state.pop(self.state.index((white_piece.position, white_piece.whose_piece + " " + white_piece.type_to_string())))
                         return True
         return False
 
@@ -191,67 +194,87 @@ class Game:
             self.game_history[tuple(self.state)] += 1
             if self.game_history[tuple(self.state)] == 3:
                 print("It's a draw, threefold repetition")
-                self.running = False
+                # self.running = False
                 return True
         else:
             self.game_history[tuple(self.state)] = 1
         return False
 
-    def update_state(self, promotion, capture):
-        if capture:
-            for i in range(len(self.state)):
-                if self.state[i][0] == self.pos:
-                    self.state.pop(i)
-                    break
+    def update_state(self, promotion, castling):        
+        if castling:
+            self.state.pop(self.state.index((castling[1], self.piece.whose_piece + " Rook")))
         
         self.state.pop(self.state.index((self.last_move[1], self.piece.whose_piece + " " + self.piece.type_to_string())))
         if promotion:
             for i in range(len(self.state)):
-                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] > self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
-                    self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.white_pieces[-1].type_to_string()))
+                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
+                    if self.turn == "white":
+                        self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.white_pieces[-1].type_to_string()))
+                    else:
+                        self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.black_pieces[-1].type_to_string()))
                     break
+        elif castling:
+            first = True
+            if castling[0][0] > self.pos[0]:
+                for i in range(len(self.state) + 1):
+                    if first:
+                        if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
+                            self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
+                            first = False
+                    else:
+                        if (self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]:
+                            self.state.insert(i, (castling[0], self.piece.whose_piece + " Rook"))
+                            break
+            else:
+                for i in range(len(self.state)):
+                    if first:
+                        if (self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]:
+                            self.state.insert(i, (castling[0], self.piece.whose_piece + " Rook"))
+                            first = False
+                    else:
+                        if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]:
+                            self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
+                            break
+                            
         else:
             for i in range(len(self.state)):
-                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] > self.pos[1]) or self.state[i][0][0] > self.pos[0]:
+                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]:
                     self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
                     break
 
-    def run_game(self):
-        while self.running:
-            for event in self.controller.pygame.event.get():
-                self.update_board()
-                ## check if the user wants to quit the game
-                if event.type == self.controller.pygame.QUIT:
-                    self.running = False
-                ## check if the user clicked on a piece
-                if self.piece:
-                    if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
-                        self.get_position()
-                        if self.pos in self.piece.optional_moves:
-                            self.last_move = self.piece, self.piece.position, self.pos
-                            capture = self.piece_captured()
-                            promotion = self.promotion()
-                            if not promotion:
-                                self.piece.move(self.pos)
-                            self.update_state(promotion, capture)
-                            if self.threefold_repetition():
-                                break
-                            if self.piece.type_to_string() == "Pawn" or capture:
-                                self.fifty_move_rule = 0
-                            else:
-                                self.fifty_move_rule += 1
-                            ## counting for both players, 50 moves means each player moved 50 times, so 100 moves in total
-                            if self.fifty_move_rule == 100:
-                                print("It's a draw, fifty move rule")
-                                self.running = False
-                                break
-                            self.turn = "black" if self.turn == "white" else "white"
-                        self.piece = None
-                else:
-                    if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
-                        self.get_position()
-                        self.piece = self.piece_selected()
+    def pick(self):
+        self.get_position()
+        self.piece = self.piece_selected()
+    
+    def move(self):
+        self.last_move = self.piece, self.piece.position, self.pos
+        capture = self.piece_captured()
+        promotion = self.promotion()
+        castling = None
+        if not promotion:
+            castling = self.piece.move(self.pos)
+        self.update_state(promotion, castling)
+        if self.threefold_repetition():
+            return False
+        if self.piece.type_to_string() == "Pawn" or capture:
+            self.fifty_move_rule = 0
+        else:
+            self.fifty_move_rule += 1
+        ## counting for both players, 50 moves means each player moved 50 times, so 100 moves in total
+        if self.fifty_move_rule == 100:
+            print("It's a draw, fifty move rule")
+            return False
+        self.turn = "black" if self.turn == "white" else "white"
+        self.piece = None
+        return True
 
+        
+    def click_move(self):
+        self.get_position()
+        if self.pos in self.piece.optional_moves:
+            return self.move()
+        return True
+               
     def piece_selected(self):
         index_x = self.pos[0]
         index_y = self.pos[1]
@@ -269,9 +292,6 @@ class Game:
                     return black_piece
         return None
 
-    def compare(self, e):
-        return e[0][0], e[0][1]
-
     def init_state(self):
         self.state = []
         for white_piece in self.white_pieces:
@@ -288,7 +308,7 @@ class Game:
                     black_piece.whose_piece + " " + black_piece.type_to_string(),
                 )
             )
-        self.state.sort(key=self.compare)
+        self.state.sort(key = lambda k: [k[0][0], k[0][1]])
         
     def pieces_creator(self):
         white_color = self.controller.pygame.Color(255, 255, 255)

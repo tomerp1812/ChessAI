@@ -1,7 +1,8 @@
 from board import Board
 from controller import Controller
 from game import Game
-
+from Ai.ai import Ai
+from connector import Connector
 
 def main():
     width = 800
@@ -10,7 +11,9 @@ def main():
     controller = Controller(width, height)
     board = Board(width, height, num_of_squares, controller)
     game = Game(controller, board)
-    game.run_game()
+    ai = Ai()
+    connector = Connector(ai, game, controller)
+    connector.run_game()
     
 if __name__ == "__main__":
     main()
