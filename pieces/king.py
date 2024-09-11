@@ -1,12 +1,14 @@
 from pieces.piece import Piece
 from check import am_i_in_check
-
+import copy
 
 class King(Piece):
-    def __init__(self, color, position, image, controller):
-        self.king_first_move = True
+    def __init__(self, position, whose_piece, color = None, image = None, controller = None):
         self.my_rooks_dictionary = {}
-        super().__init__(color, position, image, controller)
+        super().__init__(position, whose_piece, color, image, controller)
+          
+    def init_first_move(self, king_first_move):
+        self.king_first_move = king_first_move
         
     def type_to_string(self):
         return "King"

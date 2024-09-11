@@ -1,12 +1,7 @@
-import random
-
 class Ai:
     def __init__(self):
-        pass
+        self.my_pcs = []
+        self.opp_pcs = []
+        self.my_king = None
+        self.opp_king = None
     
-    def move(self, pieces):         
-        i = random.randint(0, len(pieces) - 1)
-        while len(pieces[i].optional_moves) == 0:
-            i = random.randint(0, len(pieces) - 1)
-        j = random.randint(0, len(pieces[i].optional_moves) - 1)
-        return pieces[i], pieces[i].optional_moves[j]

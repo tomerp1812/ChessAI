@@ -1,16 +1,14 @@
 from check import am_i_in_check
-
+# self, position, whose_piece, color = None, image = None, controller = None
 class Piece:
-    def __init__(self, color, position, image, controller):
+    def __init__(self, position, whose_piece, color = None, image = None, controller = None):
         self.controller = controller
         self.color = color
-        if self.color == (255, 255, 255):
-            self.whose_piece = "white"
-        else:
-            self.whose_piece = "black"
+        self.whose_piece = whose_piece
         self.position = position
         self.image = image
-        self.image = self.controller.pygame.transform.scale(self.image, (100, 100))
+        if self.controller:
+            self.image = self.controller.pygame.transform.scale(self.image, (100, 100))
         self.optional_moves = []
         self.own_pieces_positions = []
         self.capturable_pieces_positions = []

@@ -6,12 +6,6 @@ class Connector:
         # self.game.pieces_creator(controller)
         self.running = True
         self.turn = "white"
-
-    def get_position(self):
-        self.pos = self.controller.pygame.mouse.get_pos()
-        index_x = self.pos[0] // 100
-        index_y = self.pos[1] // 100
-        self.pos = (index_x, index_y)
         
     def run_game(self):
         while self.running:
@@ -35,7 +29,7 @@ class Connector:
                 self.running = self.game.update_board()
                 if not self.running:
                     break
-                piece, new_position = self.ai.move(self.game.black_pieces)
+                piece, new_position = self.ai.move(self.game.black_pieces, self.game.white_pieces, self.game.last_move)
                 self.game.piece = piece
                 self.game.pos = new_position
                 self.running = self.game.move()

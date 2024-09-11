@@ -207,7 +207,7 @@ class Game:
         self.state.pop(self.state.index((self.last_move[1], self.piece.whose_piece + " " + self.piece.type_to_string())))
         if promotion:
             for i in range(len(self.state)):
-                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
+                if ((self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]) or i == len(self.state) - 1:
                     if self.turn == "white":
                         self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.white_pieces[-1].type_to_string()))
                     else:
@@ -218,27 +218,27 @@ class Game:
             if castling[0][0] > self.pos[0]:
                 for i in range(len(self.state) + 1):
                     if first:
-                        if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]:
+                        if ((self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.last_move[2][0]) or i == len(self.state) - 1:
                             self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
                             first = False
                     else:
-                        if (self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]:
+                        if ((self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]) or i == len(self.state):
                             self.state.insert(i, (castling[0], self.piece.whose_piece + " Rook"))
                             break
             else:
                 for i in range(len(self.state)):
                     if first:
-                        if (self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]:
+                        if ((self.state[i][0][0] == castling[0][0] and self.state[i][0][1] >= castling[0][1]) or self.state[i][0][0] > castling[0][0]) or i == len(self.state) - 1:
                             self.state.insert(i, (castling[0], self.piece.whose_piece + " Rook"))
                             first = False
                     else:
-                        if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]:
+                        if ((self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]) or i == len(self.state) - 1:
                             self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
                             break
                             
         else:
             for i in range(len(self.state)):
-                if (self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]:
+                if ((self.state[i][0][0] == self.pos[0] and self.state[i][0][1] >= self.pos[1]) or self.state[i][0][0] > self.pos[0]) or i == len(self.state) - 1:
                     self.state.insert(i, (self.pos, self.piece.whose_piece + " " + self.piece.type_to_string()))
                     break
 
@@ -313,43 +313,48 @@ class Game:
     def pieces_creator(self):
         white_color = self.controller.pygame.Color(255, 255, 255)
         black_color = self.controller.pygame.Color(0, 0, 0)
-
+        white = "white"
+        black = "black"
         for i in range(8):
             # create white pawns
             position = (i, 6)
             pawn = Pawn(
-                white_color,
                 position,
+                white,
+                white_color,
                 self.controller.images["white_pawn"],
                 self.controller,
             )
             self.white_pieces.append(pawn)
         rook1 = Rook(
-            white_color, (0, 7), self.controller.images["white_rook"], self.controller
+            (0, 7), white, white_color, self.controller.images["white_rook"], self.controller
         )
+        rook1.init_first_move(True)
         knight1 = Knight(
-            white_color, (1, 7), self.controller.images["white_knight"], self.controller
+            (1, 7), white, white_color, self.controller.images["white_knight"], self.controller
         )
         bishop1 = Bishop(
-            white_color, (2, 7), self.controller.images["white_bishop"], self.controller
+            (2, 7), white, white_color, self.controller.images["white_bishop"], self.controller
         )
         queen = Queen(
-            white_color, (3, 7), self.controller.images["white_queen"], self.controller
+            (3, 7), white, white_color, self.controller.images["white_queen"], self.controller
         )
         king = King(
-            white_color, (4, 7), self.controller.images["white_king"], self.controller
+            (4, 7), white, white_color, self.controller.images["white_king"], self.controller
         )
         bishop2 = Bishop(
-            white_color, (5, 7), self.controller.images["white_bishop"], self.controller
+            (5, 7), white, white_color, self.controller.images["white_bishop"], self.controller
         )
         knight2 = Knight(
-            white_color, (6, 7), self.controller.images["white_knight"], self.controller
+            (6, 7), white, white_color, self.controller.images["white_knight"], self.controller
         )
         rook2 = Rook(
-            white_color, (7, 7), self.controller.images["white_rook"], self.controller
+            (7, 7), white, white_color, self.controller.images["white_rook"], self.controller
         )
+        rook2.init_first_move(True)
         king.my_rooks(rook1, "long")
         king.my_rooks(rook2, "short")
+        king.init_first_move(True)
         self.white_pieces.extend(
             [rook1, knight1, bishop1, queen, king, bishop2, knight2, rook2]
         )
@@ -358,40 +363,44 @@ class Game:
             # create black pawns
             position = (i, 1)
             pawn = Pawn(
-                black_color,
                 position,
+                black,
+                black_color,
                 self.controller.images["black_pawn"],
                 self.controller,
             )
             self.black_pieces.append(pawn)
 
         black_rook1 = Rook(
-            black_color, (0, 0), self.controller.images["black_rook"], self.controller
+            (0, 0), black, black_color, self.controller.images["black_rook"], self.controller
         )
+        black_rook1.init_first_move(True)
         black_knight1 = Knight(
-            black_color, (1, 0), self.controller.images["black_knight"], self.controller
+            (1, 0), black, black_color, self.controller.images["black_knight"], self.controller
         )
         black_bishop1 = Bishop(
-            black_color, (2, 0), self.controller.images["black_bishop"], self.controller
+            (2, 0), black, black_color, self.controller.images["black_bishop"], self.controller
         )
         black_queen = Queen(
-            black_color, (3, 0), self.controller.images["black_queen"], self.controller
+            (3, 0), black, black_color, self.controller.images["black_queen"], self.controller
         )
         black_king = King(
-            black_color, (4, 0), self.controller.images["black_king"], self.controller
+            (4, 0), black, black_color, self.controller.images["black_king"], self.controller
         )
         black_bishop2 = Bishop(
-            black_color, (5, 0), self.controller.images["black_bishop"], self.controller
+            (5, 0), black, black_color, self.controller.images["black_bishop"], self.controller
         )
         black_knight2 = Knight(
-            black_color, (6, 0), self.controller.images["black_knight"], self.controller
+            (6, 0), black, black_color, self.controller.images["black_knight"], self.controller
         )
         black_rook2 = Rook(
-            black_color, (7, 0), self.controller.images["black_rook"], self.controller
+            (7, 0), black, black_color, self.controller.images["black_rook"], self.controller
         )
+        black_rook2.init_first_move(True)
         ## assosiate king to the rooks for casteling
         black_king.my_rooks(black_rook1, "long")
         black_king.my_rooks(black_rook2, "short")
+        black_king.init_first_move(True)
         self.black_pieces.extend(
             [
                 black_rook1,
