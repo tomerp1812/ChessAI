@@ -101,25 +101,20 @@ class SimpleAi(Ai):
         beta = np.inf
         best_pcs = None
         opt_mov = None
-        for piece in self.my_pcs:
-            for move in piece.optional_moves:
-                index = self.my_pcs.index(piece)
+        length = len(self.my_pcs)
+        for i in range(length):
+            piece = self.my_pcs[i]
+            optional_moves = piece.optional_moves
+            for move in optional_moves:
                 other_piece, other_index = self.new_position(piece, move, last_move, self.my_pcs, self.opp_pcs)
-                if other_piece and other_piece.whose_piece == piece.whose_piece:
-                    last_move = self.my_pcs[-2], piece.position, move
-                else:
-                    last_move = self.my_pcs[-1], piece.position, move
+                last_move = piece, piece.position, move
                 val = self.min_value(alpha, beta, 3, last_move)
                 if val > value:
                     value = val
                     best_pcs = piece
                     opt_mov = move
-                if value >= beta:
-                    for my_piece in my_pieces:
-                        if my_piece.position == best_pcs.position:
-                            return my_piece, opt_mov
                 alpha = max(alpha, value)
-                self.restore(piece, other_piece, saved_optional_moves, index, other_index, self.my_pcs, self.opp_pcs)
+                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
                         
         print(value)
         for my_piece in my_pieces:
@@ -189,42 +184,42 @@ class SimpleAi(Ai):
         if self.terminal_state(self.opp_pcs, depth):
             return self.utility()
         value = -np.inf
-        for piece in self.my_pcs:
-            for optional_move in piece.optional_moves:
-                index = self.my_pcs.index(piece)
+        length = len(self.my_pcs)
+        saved_optional_moves = self.update_move_options(last_move)
+        for i in range(length):
+            optional_moves = self.my_pcs[i].optional_moves
+            for optional_move in optional_moves:
+                piece = self.my_pcs[i]
                 other_piece, other_index = self.new_position(piece, optional_move, last_move, self.my_pcs, self.opp_pcs)
-                if other_piece and other_piece.whose_piece == piece.whose_piece:
-                    last_move = self.my_pcs[index], piece.position, optional_move
-                else:
-                    last_move = self.my_pcs[index], piece.position, optional_move
-                saved_optional_moves = self.update_move_options(last_move)
+                last_move = piece, piece.position, optional_move
                 val = self.min_value(alpha, beta, depth - 1, last_move)
                 value = max(value, val)
                 if value >= beta:
+                    self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
                     return value
                 alpha = max(alpha, value)
-                self.restore(piece, other_piece, saved_optional_moves, index, other_index, self.my_pcs, self.opp_pcs)
+                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
         return value
     
     def min_value(self, alpha, beta, depth, last_move):
         if self.terminal_state(self.my_pcs, depth):
-            return self.utility(), None, None
+            return self.utility()
         value = np.inf
-        for piece in self.opp_pcs:
-            for optional_move in piece.optional_moves:
-                index = self.opp_pcs.index(piece)
+        length = len(self.opp_pcs)
+        saved_optional_moves = self.update_move_options(last_move)
+        for i in range(length):
+            optional_moves = self.opp_pcs[i].optional_moves
+            for optional_move in optional_moves:
+                piece = self.opp_pcs[i]
                 other_piece, other_index = self.new_position(piece, optional_move, last_move, self.opp_pcs, self.my_pcs)
-                if other_piece and other_piece.whose_piece == piece.whose_piece:
-                    last_move = self.my_pcs[-2], piece.position, optional_move
-                else:
-                    last_move = self.my_pcs[-1], piece.position, optional_move
-                saved_optional_moves = self.update_move_options(last_move)
+                last_move = piece, piece.position, optional_move
                 val = self.max_value(alpha, beta, depth - 1, last_move)
                 value = min(value, val)
                 if value <= alpha:
+                    self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.opp_pcs, self.my_pcs)
                     return value
                 beta = min(beta, value)
-                self.restore(piece, other_piece, saved_optional_moves, index, other_index, self.opp_pcs, self.my_pcs)
+                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.opp_pcs, self.my_pcs)
         return value
     
     def terminal_state(self, pieces, depth):
