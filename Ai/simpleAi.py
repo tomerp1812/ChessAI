@@ -46,11 +46,11 @@ class SimpleAi(Ai):
             i += 1
    
         if rooks[1].position == king.my_rooks_dictionary["short"].position:
-            pcs[index].my_rooks(rooks[0], "short")
-            pcs[index].my_rooks(rooks[1], "long")
-        else:
-            pcs[index].my_rooks(rooks[1], "short")
             pcs[index].my_rooks(rooks[0], "long")
+            pcs[index].my_rooks(rooks[1], "short")
+        else:
+            pcs[index].my_rooks(rooks[1], "long")
+            pcs[index].my_rooks(rooks[0], "short")
         return pcs[index]
     
     def init_kings(self, piece):
@@ -62,6 +62,10 @@ class SimpleAi(Ai):
             piece.init_opponent_king(self.my_king)
         
     def create_position(self, my_pieces, opponent_pieces):
+        self.my_pcs = []
+        self.opp_pcs = []
+        self.my_king = None
+        self.opp_king = None
         my_king = self.create_new_pieces(self.my_pcs, my_pieces)
         opp_king = self.create_new_pieces(self.opp_pcs, opponent_pieces)
         
@@ -136,36 +140,64 @@ class SimpleAi(Ai):
         # move piece
         new_piece = self.create_new_piece(piece)
         self.init_kings(new_piece)
-        new_piece.move(optional_move)
         index = my_pcs.index(piece)
-        my_pcs.remove(piece)
-        my_pcs.insert(index, new_piece)
-        
         old_other_piece = None
         new_other_piece = None
         
+        if piece.type_to_string() != "King":
+            new_piece.move(optional_move)
+            my_pcs.remove(piece)
+            my_pcs.insert(index, new_piece)
+        
         # Castling
-        if piece.type_to_string() == "King":
-            new_piece.init_first_move(False)
+        else:
             if abs(piece.position[0] - optional_move[0]) == 2:
                 if piece.position[0] > optional_move[0]:
                     old_other_piece = piece.my_rooks_dictionary["long"]
                     new_other_piece = self.create_new_piece(old_other_piece)
-                    self.init_kings(new_other_piece)
-                    new_other_piece.move((old_other_piece.position[0] + 3, old_other_piece.position[1]))
+                    new_piece.my_rooks(new_other_piece, "long")
+                    new_piece.my_rooks(piece.my_rooks_dictionary["short"], "short")
                 else:
                     old_other_piece = piece.my_rooks_dictionary["short"]
                     new_other_piece = self.create_new_piece(old_other_piece)
-                    self.init_kings(new_other_piece)
-                    new_other_piece.move((old_other_piece.position[0] - 2, old_other_piece.position[1]))
+                    new_piece.my_rooks(new_other_piece, "short")
+                    new_piece.my_rooks(piece.my_rooks_dictionary["long"], "long")
+                    
+                self.init_kings(new_other_piece)
+                new_other_piece.init_first_move(False)
+                new_piece.init_first_move(False)
+                new_piece.move(optional_move)
                 other_index = my_pcs.index(old_other_piece)
                 my_pcs.remove(old_other_piece)
                 my_pcs.insert(other_index, new_other_piece)
-                return old_other_piece, other_index
 
+                return old_other_piece, other_index
+            else:
+                new_piece.move(optional_move)
+                my_pcs.remove(piece)
+                my_pcs.insert(index, new_piece)
+                
         # En passant
-        # if piece.type_to_string() == "Pawn":
-        #     if last_move
+        if new_piece.type_to_string() == "Pawn":
+            if last_move[0].type_to_string() == "Pawn":
+                if last_move[0].whose_piece == "white":
+                    if piece.position[1] == 4 and new_piece.position[1] == 5:
+                        if last_move[1][1] == 6 and last_move[2][1] == 4 and abs(last_move[2][0] - piece.position[0]) == 1:
+                            if new_piece.position[0] == last_move[2][0]:
+                                for opp in opp_pcs:
+                                    if opp.position == last_move[2]:
+                                        other_index = opp_pcs.index(opp)
+                                        opp_pcs.remove(opp)
+                                        return opp, other_index
+                else:
+                    if piece.position[1] == 3 and new_piece.position[1] == 2:
+                        if last_move[1][1] == 1 and last_move[2][1] == 3 and abs(last_move[2][0] - piece.position[0]) == 1:
+                            if new_piece.position[0] == last_move[2][0]:
+                                for opp in opp_pcs:
+                                    if opp.position == last_move[2]:
+                                        other_index = opp_pcs.index(opp)
+                                        opp_pcs.remove(opp)
+                                        return opp, other_index
         
         if piece.type_to_string() == "Rook":
             new_piece.init_first_move(False)
