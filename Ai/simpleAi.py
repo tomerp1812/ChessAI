@@ -42,7 +42,7 @@ class SimpleAi(Ai):
             elif new_piece.type_to_string() == "King":
                 king = piece
                 index = i
-            pcs.append(self.create_new_piece(new_piece))
+            pcs.append(new_piece)
             i += 1
    
         if rooks[1].position == king.my_rooks_dictionary["short"].position:
@@ -78,6 +78,32 @@ class SimpleAi(Ai):
             self.init_kings(piece)
     
     def restore(self, piece, other_piece, saved_optional_moves, index, other_index, my_pcs, opp_pcs):
+        if piece.type_to_string() == "Rook":
+            if piece.whose_piece == self.my_king.whose_piece:
+                if self.my_king.my_rooks_dictionary["long"].position == my_pcs[index].position:
+                    self.my_king.my_rooks(piece, "long")
+                elif self.my_king.my_rooks_dictionary["short"].position == my_pcs[index].position:
+                    self.my_king.my_rooks(piece, "short")
+                else:
+                    print("Error in restore")
+            else:
+                if self.opp_king.my_rooks_dictionary["long"].position == my_pcs[index].position:
+                    self.opp_king.my_rooks(piece, "long")
+                elif self.opp_king.my_rooks_dictionary["short"].position == my_pcs[index].position:
+                    self.opp_king.my_rooks(piece, "short")
+                else:
+                    print("Error in restore")
+        elif piece.type_to_string() == "King":
+            if piece.whose_piece == self.my_king.whose_piece:
+                self.my_king = piece
+            else:
+                self.opp_king = piece
+            
+            for opp in opp_pcs:
+                self.init_kings(opp)
+            for my_piece in my_pcs:
+                self.init_kings(my_piece)
+                
         del my_pcs[index]
         my_pcs.insert(index, piece)
         if other_piece:
@@ -149,30 +175,50 @@ class SimpleAi(Ai):
             my_pcs.remove(piece)
             my_pcs.insert(index, new_piece)
         
-        # Castling
+        # king move
         else:
+            if self.my_king.whose_piece == new_piece.whose_piece:
+                short_rook = self.my_king.my_rooks_dictionary["short"]
+                long_rook = self.my_king.my_rooks_dictionary["long"]
+                self.my_king = new_piece
+            else:
+                short_rook = self.opp_king.my_rooks_dictionary["short"]
+                long_rook = self.opp_king.my_rooks_dictionary["long"]
+                self.opp_king = new_piece
+                
+            for opp in opp_pcs:
+                self.init_kings(opp)
+            for my_piece in my_pcs:
+                self.init_kings(my_piece)
+            
+            new_piece.init_first_move(False)
+            
+            # Castling
             if abs(piece.position[0] - optional_move[0]) == 2:
                 if piece.position[0] > optional_move[0]:
-                    old_other_piece = piece.my_rooks_dictionary["long"]
-                    new_other_piece = self.create_new_piece(old_other_piece)
+                    old_other_piece = long_rook
+                    new_other_piece = self.create_new_piece(long_rook)
                     new_piece.my_rooks(new_other_piece, "long")
-                    new_piece.my_rooks(piece.my_rooks_dictionary["short"], "short")
+                    new_piece.my_rooks(short_rook, "short")
                 else:
-                    old_other_piece = piece.my_rooks_dictionary["short"]
-                    new_other_piece = self.create_new_piece(old_other_piece)
+                    old_other_piece = short_rook
+                    new_other_piece = self.create_new_piece(short_rook)
                     new_piece.my_rooks(new_other_piece, "short")
-                    new_piece.my_rooks(piece.my_rooks_dictionary["long"], "long")
+                    new_piece.my_rooks(long_rook, "long")
                     
                 self.init_kings(new_other_piece)
                 new_other_piece.init_first_move(False)
-                new_piece.init_first_move(False)
-                new_piece.move(optional_move)
                 other_index = my_pcs.index(old_other_piece)
+                new_piece.move(optional_move)
+                my_pcs.remove(piece)
+                my_pcs.insert(index, new_piece)
                 my_pcs.remove(old_other_piece)
                 my_pcs.insert(other_index, new_other_piece)
 
                 return old_other_piece, other_index
             else:
+                new_piece.my_rooks(short_rook, "short")
+                new_piece.my_rooks(long_rook, "long")
                 new_piece.move(optional_move)
                 my_pcs.remove(piece)
                 my_pcs.insert(index, new_piece)
@@ -201,6 +247,20 @@ class SimpleAi(Ai):
         
         if piece.type_to_string() == "Rook":
             new_piece.init_first_move(False)
+            if new_piece.whose_piece == self.my_king.whose_piece:
+                if self.my_king.my_rooks_dictionary["long"].position == piece.position:
+                    self.my_king.my_rooks(new_piece, "long")
+                elif self.my_king.my_rooks_dictionary["short"].position == piece.position:
+                    self.my_king.my_rooks(new_piece, "short")
+                else:
+                    print("Error")
+            else:
+                if self.opp_king.my_rooks_dictionary["long"].position == piece.position:
+                    self.opp_king.my_rooks(new_piece, "long")
+                elif self.opp_king.my_rooks_dictionary["short"].position == piece.position:
+                    self.opp_king.my_rooks(new_piece, "short")
+                else:
+                    print("Error")
         
         for opp in opp_pcs:
             if opp.position == optional_move:
