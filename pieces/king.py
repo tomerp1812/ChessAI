@@ -55,16 +55,18 @@ class King(Piece):
             new_position = (self.position[0] + king_move[0], self.position[1] + king_move[1])
             self.check_move(True, new_position, white_pieces, black_pieces)
 
-        if self.king_first_move and self.my_rooks_dictionary["long"].rook_first_move:
-            if self.whose_piece == "white":
-                self.castling_options([(2, 7), (3, 7), (4, 7)], [(1, 7), (2, 7), (3, 7)], black_pieces, (2, 7))
-            else:
-                self.castling_options([(2, 0), (3, 0), (4, 0)], [(1, 0), (2, 0), (3, 0)], white_pieces, (2, 0))
+        if "long" in self.my_rooks_dictionary:
+            if self.king_first_move and self.my_rooks_dictionary["long"].rook_first_move:
+                if self.whose_piece == "white":
+                    self.castling_options([(2, 7), (3, 7), (4, 7)], [(1, 7), (2, 7), (3, 7)], black_pieces, (2, 7))
+                else:
+                    self.castling_options([(2, 0), (3, 0), (4, 0)], [(1, 0), (2, 0), (3, 0)], white_pieces, (2, 0))
 
-        if self.king_first_move and self.my_rooks_dictionary["short"].rook_first_move:
-            if self.whose_piece == "white":
-                self.castling_options([(6, 7), (5, 7), (4, 7)], [(5, 7), (6, 7)], black_pieces, (6, 7))
-            else:
-                self.castling_options([(6, 0), (5, 0), (4, 0)], [(5, 0), (6, 0)], white_pieces, (6, 0))
+        if "short" in self.my_rooks_dictionary:
+            if self.king_first_move and self.my_rooks_dictionary["short"].rook_first_move:
+                if self.whose_piece == "white":
+                    self.castling_options([(6, 7), (5, 7), (4, 7)], [(5, 7), (6, 7)], black_pieces, (6, 7))
+                else:
+                    self.castling_options([(6, 0), (5, 0), (4, 0)], [(5, 0), (6, 0)], white_pieces, (6, 0))
 
         return self.optional_moves

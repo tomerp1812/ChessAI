@@ -29,10 +29,13 @@ class Connector:
                 self.running = self.game.update_board()
                 if not self.running:
                     break
-                piece, new_position = self.ai.move(self.game.black_pieces, self.game.white_pieces, self.game.last_move)
+                piece, new_position, promoted = self.ai.move(self.game.black_pieces, self.game.white_pieces, self.game.last_move)
                 self.game.piece = piece
                 self.game.pos = new_position
-                self.running = self.game.move()
+                if piece is None:
+                    self.running = False
+                    break
+                self.running = self.game.move(promoted)
                 if not self.running:
                     break
                 self.turn = self.game.turn

@@ -8,341 +8,425 @@ from pieces.rook import Rook
 from pieces.queen import Queen
 from pieces.king import King
 
+
 class SimpleAi(Ai):
     def __init__(self):
         super().__init__()
-        
-    def create_new_piece(self, piece):
-        if piece.type_to_string() == "Pawn":
-            new_piece = Pawn(piece.position, piece.whose_piece)
-        elif piece.type_to_string() == "Knight":
-            new_piece = Knight(piece.position, piece.whose_piece)
-        elif piece.type_to_string() == "Bishop":
-            new_piece = Bishop(piece.position, piece.whose_piece)
-        elif piece.type_to_string() == "Queen":
-            new_piece = Queen(piece.position, piece.whose_piece)
-        elif piece.type_to_string() == "Rook":
-            new_piece = Rook(piece.position, piece.whose_piece)
-            new_piece.init_first_move(piece.rook_first_move)
-        elif piece.type_to_string() == "King":
-            new_piece = King(piece.position, piece.whose_piece)
-            new_piece.init_first_move(piece.king_first_move)
-        new_piece.optional_moves = piece.optional_moves
-        return new_piece
-    
-    def create_new_pieces(self, pcs, pieces):
-        rooks = []
-        king = None
-        index = 0
-        i = 0
-        for piece in pieces:
-            new_piece = self.create_new_piece(piece)
-            if new_piece.type_to_string() == "Rook":
-                rooks.append(new_piece)
-            elif new_piece.type_to_string() == "King":
-                king = piece
-                index = i
-            pcs.append(new_piece)
-            i += 1
    
-        if rooks[1].position == king.my_rooks_dictionary["short"].position:
-            pcs[index].my_rooks(rooks[0], "long")
-            pcs[index].my_rooks(rooks[1], "short")
-        else:
-            pcs[index].my_rooks(rooks[1], "long")
-            pcs[index].my_rooks(rooks[0], "short")
-        return pcs[index]
-    
-    def init_kings(self, piece):
-        if piece.whose_piece == self.my_king.whose_piece:
-            piece.init_my_king(self.my_king)
-            piece.init_opponent_king(self.opp_king)
-        else:
-            piece.init_my_king(self.opp_king)
-            piece.init_opponent_king(self.my_king)
+    def init(self, black_pieces, white_pieces):
+        self.black_pieces = black_pieces
+        self.white_pieces = white_pieces
         
-    def create_position(self, my_pieces, opponent_pieces):
-        self.my_pcs = []
-        self.opp_pcs = []
-        self.my_king = None
-        self.opp_king = None
-        my_king = self.create_new_pieces(self.my_pcs, my_pieces)
-        opp_king = self.create_new_pieces(self.opp_pcs, opponent_pieces)
+        for piece in black_pieces:
+            if piece.type_to_string() == "King":
+                self.black_king = piece
+                break
         
-        self.my_king = my_king
-        self.opp_king = opp_king
-        
-        for piece in self.my_pcs:
-            self.init_kings(piece)
-        for piece in self.opp_pcs:
-            self.init_kings(piece)
-    
-    def restore(self, piece, other_piece, saved_optional_moves, index, other_index, my_pcs, opp_pcs):
-        if piece.type_to_string() == "Rook":
-            if piece.whose_piece == self.my_king.whose_piece:
-                if self.my_king.my_rooks_dictionary["long"].position == my_pcs[index].position:
-                    self.my_king.my_rooks(piece, "long")
-                elif self.my_king.my_rooks_dictionary["short"].position == my_pcs[index].position:
-                    self.my_king.my_rooks(piece, "short")
-                else:
-                    print("Error in restore")
-            else:
-                if self.opp_king.my_rooks_dictionary["long"].position == my_pcs[index].position:
-                    self.opp_king.my_rooks(piece, "long")
-                elif self.opp_king.my_rooks_dictionary["short"].position == my_pcs[index].position:
-                    self.opp_king.my_rooks(piece, "short")
-                else:
-                    print("Error in restore")
-        elif piece.type_to_string() == "King":
-            if piece.whose_piece == self.my_king.whose_piece:
-                self.my_king = piece
-            else:
-                self.opp_king = piece
+        for piece in white_pieces:
+            if piece.type_to_string() == "King":
+                self.white_king = piece
+                break
             
-            for opp in opp_pcs:
-                self.init_kings(opp)
-            for my_piece in my_pcs:
-                self.init_kings(my_piece)
-                
-        del my_pcs[index]
-        my_pcs.insert(index, piece)
-        if other_piece:
-            if other_piece.whose_piece == piece.whose_piece:
-                del my_pcs[other_index]
-                my_pcs.insert(other_index, other_piece)
-            else:
-                opp_pcs.insert(other_index, other_piece)
+    def restore(self, piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion = False, promoted = None):
         
-        for key in saved_optional_moves:
-            if saved_optional_moves[key][1] == "white":
-                for piece in self.opp_pcs:
-                    if piece.position == key:
-                        piece.optional_moves = saved_optional_moves[key][0]
+        if promotion:
+            if promoted.whose_piece == self.white_king.whose_piece:
+                self.white_pieces.pop(-1)
             else:
-                for piece in self.my_pcs:
-                    if piece.position == key:
-                        piece.optional_moves = saved_optional_moves[key][0]
+                self.black_pieces.pop(-1)
+            
+        ### capture, castle are indexes
+        if other_piece:
+            if capture is not None:
+                if other_piece.whose_piece == self.white_king.whose_piece:
+                    self.white_pieces.insert(capture, other_piece)
+                else:
+                    self.black_pieces.insert(capture, other_piece)
+            elif castle is not None:
+                other_piece.rook_first_move = True
+                if other_piece.whose_piece == self.white_king.whose_piece:
+                    if other_piece.position == (5, 7):
+                        other_piece.position = (7, 7)
+                    elif other_piece.position == (3, 7):
+                        other_piece.position = (0, 7)
+                    else:
+                        print("error in restore: castling")
+                else:
+                    if other_piece.position == (5, 0):
+                        other_piece.position = (7, 0)
+                    elif other_piece.position == (3, 0):
+                        other_piece.position = (0, 0)
+                    else:
+                        print("error in restore: castling")
+            else:
+                print("Error in restore")
                 
-    def move(self, my_pieces, opponent_pieces, last_move):
-        self.create_position(my_pieces, opponent_pieces)
+        piece.position = current_move[1]
+        if piece.type_to_string() == "Rook":
+            piece.rook_first_move = first_move
+        elif piece.type_to_string() == "King":
+            piece.king_first_move = first_move
+                    
+        # if piece.whose_piece == self.white_king.whose_piece:
+        for white_piece in self.white_pieces:
+            white_piece.optional_moves = saved_optional_moves[white_piece.position]
+        # else:
+        for black_piece in self.black_pieces:
+            black_piece.optional_moves = saved_optional_moves[black_piece.position]
+
+    def update_move_options(self, last_move):
+        saved_optional_moves = {}
+
+        # if last_move[0].whose_piece == "white":
+        for black_piece in self.black_pieces:
+            saved_optional_moves[black_piece.position] = black_piece.optional_moves
+            black_piece.move_options(self.white_pieces, self.black_pieces, last_move)
+
+        # elif last_move[0].whose_piece == "black":
+        for white_piece in self.white_pieces:
+            saved_optional_moves[white_piece.position] = white_piece.optional_moves
+            white_piece.move_options(self.white_pieces, self.black_pieces, last_move)
+                
+        # else:
+            # print("Error in update_move")
+
+        return saved_optional_moves
+
+    def check_castling(self, black_rook, white_rook, king):
+        if king.whose_piece == self.black_king.whose_piece:
+            for black_piece in self.black_pieces:
+                if black_piece.position == black_rook:
+                    return black_piece
+        else:
+            for white_piece in self.white_pieces:
+                if white_piece.position == white_rook:
+                    return white_piece
+        return None
+
+    def pieces_effected(self, piece, optional_move, last_move):
+        captured_piece = None
+        castling = None
+        en_passant = None
+        promotion = False
+        
+        if piece.whose_piece == self.black_king.whose_piece:
+            # capture
+            for white_piece in self.white_pieces:
+                if white_piece.position == optional_move:
+                    captured_piece = white_piece
+                    break
+        else:
+            for black_piece in self.black_pieces:
+                if black_piece.position == optional_move:
+                    captured_piece = black_piece
+                    break
+        
+        # castling
+        if piece.type_to_string() == "King":
+            if abs(piece.position[0] - optional_move[0]) == 2:
+                # long castle
+                if piece.position[0] > optional_move[0]:
+                    castling = self.check_castling((0,0), (0,7), piece)
+                    if castling is None or castling.type_to_string() != "Rook":
+                        print("Error in pieces_effected: castling")
+                        print(castling)
+                # short castle
+                else:
+                    castling = self.check_castling((7,0), (7,7), piece)
+                    if castling is None or castling.type_to_string() != "Rook":
+                        print("Error in pieces_effected: castling")
+                        print(castling)
+        # en passant
+        elif piece.type_to_string() == "Pawn":
+            if last_move[0].type_to_string() == "Pawn":
+                if last_move[0].whose_piece == "white":
+                    if piece.position[1] == 4 and optional_move[1] == 5:
+                        if (
+                            last_move[1][1] == 6
+                            and last_move[2][1] == 4
+                            and abs(last_move[2][0] - piece.position[0]) == 1
+                        ):
+                            if optional_move[0] == last_move[2][0]:
+                                for white_piece in self.white_pieces:
+                                    if white_piece.position == last_move[2]:
+                                        en_passant = white_piece
+                                        break
+                else:
+                    if piece.position[1] == 3 and optional_move[1] == 2:
+                        if (
+                            last_move[1][1] == 1
+                            and last_move[2][1] == 3
+                            and abs(last_move[2][0] - piece.position[0]) == 1
+                        ):
+                            if optional_move[0] == last_move[2][0]:
+                                for black_piece in self.black_pieces:
+                                    if black_piece.position == last_move[2]:
+                                        en_passant = black_piece
+                                        break
+        
+        # promotion
+        if piece.type_to_string() == "Pawn":
+            if piece.whose_piece == self.black_king.whose_piece:
+                if optional_move[1] == 0:
+                    promotion = True
+            else:
+                if optional_move[1] == 7:
+                    promotion = True
+        
+        return captured_piece, castling, en_passant, promotion 
+ 
+    
+    def update_position(self, piece, optional_move, captured_piece, castling, en_passant, promotion, promoted = None):
+        first_move = None
+        if piece.type_to_string() == "Rook":
+            first_move = piece.rook_first_move    
+        elif piece.type_to_string() == "King":
+            first_move = piece.king_first_move   
+        piece.move(optional_move)
+        
+        if promotion:
+            if self.piece.whose_piece == self.black_king.whose_piece:
+                for i in range(len(self.black_pieces)):
+                    if self.black_pieces[i].position == piece.position:
+                        self.black_pieces.pop(i)
+                        self.black_pieces.append(promoted)
+                        break
+            else:
+                for i in range(len(self.white_pieces)):
+                    if self.white_pieces[i].position == piece.position:
+                        self.white_pieces.pop(i)
+                        self.white_pieces.append(promoted)
+                        break
+        
+        if captured_piece or en_passant:
+            if captured_piece:
+                to_remove = captured_piece
+            else:
+                to_remove = en_passant
+            if to_remove.whose_piece == self.white_king.whose_piece:
+                for i in range(len(self.white_pieces)):
+                    if self.white_pieces[i].position == to_remove.position:
+                        other_piece = self.white_pieces[i]
+                        self.white_pieces.pop(i)
+                        return other_piece, i, None, first_move
+                print("Error in update_position: captured_piece")
+            else:
+                for i in range(len(self.black_pieces)):
+                    if self.black_pieces[i].position == to_remove.position:
+                        other_piece = self.black_pieces[i]
+                        self.black_pieces.pop(i)
+                        return other_piece, i, None, first_move
+                print("Error in update_position: captured_piece")
+        elif castling:
+            if castling.whose_piece == self.white_king.whose_piece:
+                for i in range(len(self.white_pieces)):
+                    if self.white_pieces[i].position == castling.position:
+                        return self.white_pieces[i], None, i, first_move
+                print("Error in update_position: castling")
+            else:
+                for i in range(len(self.black_pieces)):
+                    if self.black_pieces[i].position == castling.position:
+                        return self.black_pieces[i], None, i, first_move
+                print("Error in update_position: castling")
+        return None, None, None, first_move
+        
+    def promotion_options(self, piece, optional_move):
+        if piece.whose_piece == self.black_king.whose_piece:
+            color = "black"
+            rgb = "0,0,0"
+        else:
+            color = "white"
+            rgb = "255,255,255"
+            
+        promotion_options = []
+        promotion_options.append(Queen(
+            optional_move,
+            color,
+            self.controller.pygame.Color(rgb),
+            self.controller.images[color + "_queen"],
+            self.controller,
+        ))
+        promotion_options.append(Rook(
+            optional_move,
+            color,
+            self.controller.pygame.Color(rgb),
+            self.controller.images[color + "_rook"],
+            self.controller,
+        ))
+        promotion_options.append(Bishop(
+            optional_move,
+            color,
+            self.controller.pygame.Color(rgb),
+            self.controller.images[color + "_bishop"],
+            self.controller,
+        ))
+        promotion_options.append(Knight(
+            optional_move,
+            color,
+            self.controller.pygame.Color(rgb),
+            self.controller.images[color + "_knight"],
+            self.controller,
+        ))
+        
+        if color == "black":
+            for piece in promotion_options:
+                piece.init_my_king(self.black_king)
+                piece.init_opponent_king(self.white_king)
+        else:
+            for piece in promotion_options:
+                piece.init_my_king(self.white_king)
+                piece.init_opponent_king(self.black_king)
+                
+        return promotion_options
+    
+    def move(self, black_pieces, white_pieces, last_move):
+        self.init(black_pieces, white_pieces)
         saved_optional_moves = self.update_move_options(last_move)
         value = -np.inf
         alpha = -np.inf
         beta = np.inf
         best_pcs = None
         opt_mov = None
-        length = len(self.my_pcs)
+        promoted = None
+        length = len(self.black_pieces)
         for i in range(length):
-            piece = self.my_pcs[i]
+            piece = self.black_pieces[i]
             optional_moves = piece.optional_moves
-            for move in optional_moves:
-                other_piece, other_index = self.new_position(piece, move, last_move, self.my_pcs, self.opp_pcs)
-                last_move = piece, piece.position, move
-                val = self.min_value(alpha, beta, 3, last_move)
-                if val > value:
-                    value = val
+            for optional_move in optional_moves:
+                current_move = piece, piece.position, optional_move
+                captured_piece, castling, en_passant, promotion  = self.pieces_effected(piece, optional_move, last_move)
+                if promotion:
+                    promotion_options = self.promotion_options(piece, optional_move)
+                    for promotion_option in promotion_options:
+                        other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion, promotion_option)
+                        val = self.min_value(alpha, beta, 1, current_move)
+                        if val > value:
+                            value = val
+                            best_pcs = piece
+                            opt_mov = promotion_option
+                            promoted = promotion_option
+                        alpha = max(alpha, value)
+                        self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion, promotion_option)    
+                else:    
+                    other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion)
+                    val = self.min_value(alpha, beta, 1, current_move)
+                    if val > value:
+                        value = val
+                        best_pcs = piece
+                        opt_mov = optional_move
+                        promoted = None
+                    alpha = max(alpha, value)
+                    self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move)
+        
+        if best_pcs is None:
+            for piece in self.black_pieces:
+                if piece.optional_moves:
                     best_pcs = piece
-                    opt_mov = move
-                alpha = max(alpha, value)
-                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
-                        
-        print(value)
-        for my_piece in my_pieces:
-            if my_piece.position == best_pcs.position:
-                return my_piece, opt_mov
-    
-    def update_move_options(self, last_move):
-        saved_optional_moves = {}
-        for piece in self.my_pcs:
-            saved_optional_moves[piece.position] = piece.optional_moves, piece.whose_piece
-            piece.move_options(self.opp_pcs, self.my_pcs, last_move)
-        
-        for opp in self.opp_pcs:
-            saved_optional_moves[opp.position] = opp.optional_moves, opp.whose_piece
-            opp.move_options(self.opp_pcs, self.my_pcs, last_move)
-        return saved_optional_moves
-        
-    def new_position(self, piece, optional_move, last_move, my_pcs, opp_pcs):
-        # move piece
-        new_piece = self.create_new_piece(piece)
-        self.init_kings(new_piece)
-        index = my_pcs.index(piece)
-        old_other_piece = None
-        new_other_piece = None
-        
-        if piece.type_to_string() != "King":
-            new_piece.move(optional_move)
-            my_pcs.remove(piece)
-            my_pcs.insert(index, new_piece)
-        
-        # king move
-        else:
-            if self.my_king.whose_piece == new_piece.whose_piece:
-                short_rook = self.my_king.my_rooks_dictionary["short"]
-                long_rook = self.my_king.my_rooks_dictionary["long"]
-                self.my_king = new_piece
-            else:
-                short_rook = self.opp_king.my_rooks_dictionary["short"]
-                long_rook = self.opp_king.my_rooks_dictionary["long"]
-                self.opp_king = new_piece
-                
-            for opp in opp_pcs:
-                self.init_kings(opp)
-            for my_piece in my_pcs:
-                self.init_kings(my_piece)
-            
-            new_piece.init_first_move(False)
-            
-            # Castling
-            if abs(piece.position[0] - optional_move[0]) == 2:
-                if piece.position[0] > optional_move[0]:
-                    old_other_piece = long_rook
-                    new_other_piece = self.create_new_piece(long_rook)
-                    new_piece.my_rooks(new_other_piece, "long")
-                    new_piece.my_rooks(short_rook, "short")
-                else:
-                    old_other_piece = short_rook
-                    new_other_piece = self.create_new_piece(short_rook)
-                    new_piece.my_rooks(new_other_piece, "short")
-                    new_piece.my_rooks(long_rook, "long")
-                    
-                self.init_kings(new_other_piece)
-                new_other_piece.init_first_move(False)
-                other_index = my_pcs.index(old_other_piece)
-                new_piece.move(optional_move)
-                my_pcs.remove(piece)
-                my_pcs.insert(index, new_piece)
-                my_pcs.remove(old_other_piece)
-                my_pcs.insert(other_index, new_other_piece)
+                    opt_mov = piece.optional_moves[0]
+                    break  
+        return best_pcs, opt_mov, promoted
 
-                return old_other_piece, other_index
-            else:
-                new_piece.my_rooks(short_rook, "short")
-                new_piece.my_rooks(long_rook, "long")
-                new_piece.move(optional_move)
-                my_pcs.remove(piece)
-                my_pcs.insert(index, new_piece)
-                
-        # En passant
-        if new_piece.type_to_string() == "Pawn":
-            if last_move[0].type_to_string() == "Pawn":
-                if last_move[0].whose_piece == "white":
-                    if piece.position[1] == 4 and new_piece.position[1] == 5:
-                        if last_move[1][1] == 6 and last_move[2][1] == 4 and abs(last_move[2][0] - piece.position[0]) == 1:
-                            if new_piece.position[0] == last_move[2][0]:
-                                for opp in opp_pcs:
-                                    if opp.position == last_move[2]:
-                                        other_index = opp_pcs.index(opp)
-                                        opp_pcs.remove(opp)
-                                        return opp, other_index
-                else:
-                    if piece.position[1] == 3 and new_piece.position[1] == 2:
-                        if last_move[1][1] == 1 and last_move[2][1] == 3 and abs(last_move[2][0] - piece.position[0]) == 1:
-                            if new_piece.position[0] == last_move[2][0]:
-                                for opp in opp_pcs:
-                                    if opp.position == last_move[2]:
-                                        other_index = opp_pcs.index(opp)
-                                        opp_pcs.remove(opp)
-                                        return opp, other_index
-        
-        if piece.type_to_string() == "Rook":
-            new_piece.init_first_move(False)
-            if new_piece.whose_piece == self.my_king.whose_piece:
-                if self.my_king.my_rooks_dictionary["long"].position == piece.position:
-                    self.my_king.my_rooks(new_piece, "long")
-                elif self.my_king.my_rooks_dictionary["short"].position == piece.position:
-                    self.my_king.my_rooks(new_piece, "short")
-                else:
-                    print("Error")
-            else:
-                if self.opp_king.my_rooks_dictionary["long"].position == piece.position:
-                    self.opp_king.my_rooks(new_piece, "long")
-                elif self.opp_king.my_rooks_dictionary["short"].position == piece.position:
-                    self.opp_king.my_rooks(new_piece, "short")
-                else:
-                    print("Error")
-        
-        for opp in opp_pcs:
-            if opp.position == optional_move:
-                other_index = opp_pcs.index(opp)
-                opp_pcs.remove(opp)
-                return opp, other_index
-        
-        return None, None
-                
-            
+
     # alpha starts at -inf, beta at inf
     def max_value(self, alpha, beta, depth, last_move):
-        if self.terminal_state(self.opp_pcs, depth):
-            return self.utility()
         value = -np.inf
-        length = len(self.my_pcs)
+        length = len(self.black_pieces)
         saved_optional_moves = self.update_move_options(last_move)
-        for i in range(length):
-            optional_moves = self.my_pcs[i].optional_moves
-            for optional_move in optional_moves:
-                piece = self.my_pcs[i]
-                other_piece, other_index = self.new_position(piece, optional_move, last_move, self.my_pcs, self.opp_pcs)
-                last_move = piece, piece.position, optional_move
-                val = self.min_value(alpha, beta, depth - 1, last_move)
-                value = max(value, val)
-                if value >= beta:
-                    self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
-                    return value
-                alpha = max(alpha, value)
-                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.my_pcs, self.opp_pcs)
-        return value
-    
-    def min_value(self, alpha, beta, depth, last_move):
-        if self.terminal_state(self.my_pcs, depth):
+        if self.terminal_state(self.black_pieces, depth):
             return self.utility()
-        value = np.inf
-        length = len(self.opp_pcs)
-        saved_optional_moves = self.update_move_options(last_move)
         for i in range(length):
-            optional_moves = self.opp_pcs[i].optional_moves
+            piece = self.black_pieces[i]
+            optional_moves = piece.optional_moves
             for optional_move in optional_moves:
-                piece = self.opp_pcs[i]
-                other_piece, other_index = self.new_position(piece, optional_move, last_move, self.opp_pcs, self.my_pcs)
-                last_move = piece, piece.position, optional_move
-                val = self.max_value(alpha, beta, depth - 1, last_move)
-                value = min(value, val)
-                if value <= alpha:
-                    self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.opp_pcs, self.my_pcs)
-                    return value
-                beta = min(beta, value)
-                self.restore(piece, other_piece, saved_optional_moves, i, other_index, self.opp_pcs, self.my_pcs)
+                current_move = piece, piece.position, optional_move
+                captured_piece, castling, en_passant, promotion  = self.pieces_effected(piece, optional_move, last_move)
+                if promotion:
+                    promotion_options = self.promotion_options(piece, optional_move)
+                    for promotion_option in promotion_options:
+                        other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion, promotion_option)
+                        val = self.min_value(alpha, beta, depth - 1, current_move)
+                        value = max(value, val)
+                        if value >= beta:
+                            self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion, promotion_option)
+                            return value
+                        alpha = max(alpha, value)
+                        self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion, promotion_option)
+                else:
+                    other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion)
+                    val = self.min_value(alpha, beta, depth - 1, current_move)
+                    value = max(value, val)
+                    if value >= beta:
+                        self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move)
+                        return value
+                    alpha = max(alpha, value)
+                    self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move)
         return value
-    
+
+    def min_value(self, alpha, beta, depth, last_move):
+        value = np.inf
+        length = len(self.white_pieces)
+        saved_optional_moves = self.update_move_options(last_move)
+        if self.terminal_state(self.white_pieces, depth):
+            return self.utility()
+        for i in range(length):
+            piece = self.white_pieces[i]
+            optional_moves = piece.optional_moves
+            for optional_move in optional_moves:
+                current_move = piece, piece.position, optional_move
+                captured_piece, castling, en_passant, promotion  = self.pieces_effected(piece, optional_move, last_move)
+                if promotion:
+                    promotion_options = self.promotion_options(piece, optional_move)
+                    for promotion_option in promotion_options:
+                        other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion, promotion_option)
+                        val = self.max_value(alpha, beta, depth - 1, current_move)
+                        value = min(value, val)
+                        if value <= alpha:
+                            self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion, promotion_option)
+                            return value
+                        beta = min(beta, value)
+                        self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move, promotion, promotion_option)
+                else:
+                    other_piece, capture, castle, first_move = self.update_position(piece, optional_move, captured_piece, castling, en_passant, promotion)
+                    val = self.max_value(alpha, beta, depth - 1, current_move)
+                    value = min(value, val)
+                    if value <= alpha:
+                        self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move)
+                        return value
+                    beta = min(beta, value)
+                    self.restore(piece, other_piece, capture, castle, first_move, saved_optional_moves, current_move)
+        return value
+
     def terminal_state(self, pieces, depth):
         if depth == 0:
             return True
-        
+
         for piece in pieces:
             if piece.optional_moves:
                 return False
         return True
-    
+
     def utility(self):
         lost = True
         won = True
-        for piece in self.my_pcs:
+        for piece in self.black_pieces:
             if piece.optional_moves:
                 lost = False
                 break
+
         if lost:
             return -np.inf
-        for piece in self.opp_pcs:
+
+        for piece in self.white_pieces:
             if piece.optional_moves:
                 won = False
                 break
         if won:
             return np.inf
-    
-        opp_val = self.evaluate(self.opp_pcs)
-        my_val = self.evaluate(self.my_pcs)
+
+        opp_val = self.evaluate(self.white_pieces)
+        my_val = self.evaluate(self.black_pieces)
         return my_val - opp_val
-                
+
     def evaluate(self, pieces):
         val = 0
         for piece in pieces:

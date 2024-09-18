@@ -86,6 +86,13 @@ class Game:
         if self.turn == "white":
             for black_piece in self.black_pieces:
                 if self.pos == black_piece.position:
+                    # if black_piece.type_to_string() == "Rook":
+                    #     if self.black_king.my_rooks_dictionary["long"] == black_piece:
+                    #         del self.black_king.my_rooks_dictionary["long"]
+                    #     elif self.black_king.my_rooks_dictionary["short"] == black_piece:
+                    #         del self.black_king.my_rooks_dictionary["short"]
+                    #     else:
+                    #         print("Error in rook deletion")
                     self.black_pieces.remove(black_piece)
                     self.state.pop(self.state.index((black_piece.position, black_piece.whose_piece + " " + black_piece.type_to_string())))
                     return True
@@ -103,6 +110,13 @@ class Game:
         else:
             for white_piece in self.white_pieces:
                 if self.pos == white_piece.position:
+                    # if white_piece.type_to_string() == "Rook":
+                    #     if self.white_king.my_rooks_dictionary["long"] == white_piece:
+                    #         del self.white_king.my_rooks_dictionary["long"]
+                    #     elif self.white_king.my_rooks_dictionary["short"] == white_piece:
+                    #         del self.white_king.my_rooks_dictionary["short"]
+                    #     else:
+                    #         print("Error in rook deletion")
                     self.white_pieces.remove(white_piece)
                     self.state.pop(self.state.index((white_piece.position, white_piece.whose_piece + " " + white_piece.type_to_string())))
                     return True
@@ -129,35 +143,49 @@ class Game:
                 if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                     clicked_pos = self.controller.pygame.mouse.get_pos()
                     if clicked_pos[0] < 390 and clicked_pos[1] < 390:
+                        #  position, whose_piece, color = None, image = None, controller = None)
                         return Queen(
-                            self.controller.pygame.Color(rgb),
                             self.last_move[2],
+                            color,
+                            self.controller.pygame.Color(rgb),
                             self.controller.images[color + "_queen"],
                             self.controller,
                         )
                     elif clicked_pos[0] > 400 and clicked_pos[1] < 390:
                         return Rook(
-                            self.controller.pygame.Color(rgb),
                             self.last_move[2],
+                            color,
+                            self.controller.pygame.Color(rgb),
                             self.controller.images[color + "_rook"],
                             self.controller,
                         )
                     elif clicked_pos[0] < 390 and clicked_pos[1] > 400:
                         return Bishop(
-                            self.controller.pygame.Color(rgb),
                             self.last_move[2],
+                            color,
+                            self.controller.pygame.Color(rgb),
                             self.controller.images[color + "_bishop"],
                             self.controller,
                         )
                     elif clicked_pos[0] > 400 and clicked_pos[1] > 400:
                         return Knight(
-                            self.controller.pygame.Color(rgb),
                             self.last_move[2],
+                            color,
+                            self.controller.pygame.Color(rgb),
                             self.controller.images[color + "_knight"],
                             self.controller,
                         )
 
-    def promotion(self):
+    def promotion(self, promoted_to):
+        if promoted_to != None:
+            if promoted_to.whose_piece == "white":
+                self.white_pieces.remove(self.piece)
+                self.white_pieces.append(promoted_to)
+            else:
+                self.black_pieces.remove(self.piece)
+                self.black_pieces.append(promoted_to)
+            return True
+        
         if self.last_move[0].type_to_string() == "Pawn":
             if self.turn == "white":
                 if self.last_move[2][1] == 0:
@@ -194,7 +222,6 @@ class Game:
             self.game_history[tuple(self.state)] += 1
             if self.game_history[tuple(self.state)] == 3:
                 print("It's a draw, threefold repetition")
-                # self.running = False
                 return True
         else:
             self.game_history[tuple(self.state)] = 1
@@ -246,10 +273,10 @@ class Game:
         self.get_position()
         self.piece = self.piece_selected()
     
-    def move(self):
+    def move(self, promoted_to = None):
         self.last_move = self.piece, self.piece.position, self.pos
         capture = self.piece_captured()
-        promotion = self.promotion()
+        promotion = self.promotion(promoted_to)
         castling = None
         if not promotion:
             castling = self.piece.move(self.pos)

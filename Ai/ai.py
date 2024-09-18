@@ -1,7 +1,7 @@
 class Ai:
     def __init__(self):
-        self.my_pcs = []
-        self.opp_pcs = []
-        self.my_king = None
-        self.opp_king = None
+        self.white_pieces = []
+        self.black_pieces = []
+        self.white_king = None
+        self.black_king = None
     
