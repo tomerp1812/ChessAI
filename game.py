@@ -66,6 +66,7 @@ class Game:
         ) or self.game_over(
             "Black", self.white_pieces, self.black_pieces, self.white_king
         ):
+            self.controller.pygame.display.flip()
             return False
 
         if self.piece:
@@ -86,13 +87,6 @@ class Game:
         if self.turn == "white":
             for black_piece in self.black_pieces:
                 if self.pos == black_piece.position:
-                    # if black_piece.type_to_string() == "Rook":
-                    #     if self.black_king.my_rooks_dictionary["long"] == black_piece:
-                    #         del self.black_king.my_rooks_dictionary["long"]
-                    #     elif self.black_king.my_rooks_dictionary["short"] == black_piece:
-                    #         del self.black_king.my_rooks_dictionary["short"]
-                    #     else:
-                    #         print("Error in rook deletion")
                     self.black_pieces.remove(black_piece)
                     self.state.pop(self.state.index((black_piece.position, black_piece.whose_piece + " " + black_piece.type_to_string())))
                     return True
@@ -110,13 +104,6 @@ class Game:
         else:
             for white_piece in self.white_pieces:
                 if self.pos == white_piece.position:
-                    # if white_piece.type_to_string() == "Rook":
-                    #     if self.white_king.my_rooks_dictionary["long"] == white_piece:
-                    #         del self.white_king.my_rooks_dictionary["long"]
-                    #     elif self.white_king.my_rooks_dictionary["short"] == white_piece:
-                    #         del self.white_king.my_rooks_dictionary["short"]
-                    #     else:
-                    #         print("Error in rook deletion")
                     self.white_pieces.remove(white_piece)
                     self.state.pop(self.state.index((white_piece.position, white_piece.whose_piece + " " + white_piece.type_to_string())))
                     return True
@@ -177,13 +164,21 @@ class Game:
                         )
 
     def promotion(self, promoted_to):
-        if promoted_to != None:
+        if promoted_to:
+            promoted_to.controller = self.controller
             if promoted_to.whose_piece == "white":
                 self.white_pieces.remove(self.piece)
                 self.white_pieces.append(promoted_to)
+                promoted_to.color = self.controller.pygame.Color(255, 255, 255)
+                promoted_to.image = self.controller.images["white_" + promoted_to.type_to_string().lower()]
+                promoted_to.image = promoted_to.controller.pygame.transform.scale(promoted_to.image, (100, 100))
             else:
                 self.black_pieces.remove(self.piece)
                 self.black_pieces.append(promoted_to)
+                promoted_to.color = self.controller.pygame.Color(0, 0, 0)
+                promoted_to.image = self.controller.images["black_" + promoted_to.type_to_string().lower()]
+                promoted_to.image = promoted_to.controller.pygame.transform.scale(promoted_to.image, (100, 100))
+
             return True
         
         if self.last_move[0].type_to_string() == "Pawn":

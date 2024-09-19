@@ -2,7 +2,8 @@ from pieces.piece import Piece
 
 class Rook(Piece):
     def __init__(self, position, whose_piece, color = None, image = None, controller = None):
-        super().__init__(position, whose_piece, color, image, controller)
+        self.rook_first_move = True
+        super().__init__(position, whose_piece, color, image, controller, 5)
     
     def init_first_move(self, rook_first_move):
         self.rook_first_move = rook_first_move

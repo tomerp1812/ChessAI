@@ -1,7 +1,8 @@
 from check import am_i_in_check
 # self, position, whose_piece, color = None, image = None, controller = None
 class Piece:
-    def __init__(self, position, whose_piece, color = None, image = None, controller = None):
+    def __init__(self, position, whose_piece, color = None, image = None, controller = None, value = None):
+        self.value = value
         self.controller = controller
         self.color = color
         self.whose_piece = whose_piece

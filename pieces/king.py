@@ -5,7 +5,7 @@ import copy
 class King(Piece):
     def __init__(self, position, whose_piece, color = None, image = None, controller = None):
         self.my_rooks_dictionary = {}
-        super().__init__(position, whose_piece, color, image, controller)
+        super().__init__(position, whose_piece, color, image, controller, 1000)
           
     def init_first_move(self, king_first_move):
         self.king_first_move = king_first_move

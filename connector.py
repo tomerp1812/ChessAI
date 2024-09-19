@@ -1,3 +1,5 @@
+import time
+
 class Connector:
     def __init__(self, ai, game, controller):
         self.controller = controller
@@ -13,6 +15,7 @@ class Connector:
                 for event in self.controller.pygame.event.get():
                     self.running = self.game.update_board()
                     if not self.running:
+                        time.sleep(5)
                         break
                     if event.type == self.controller.pygame.QUIT:
                         self.running = False
@@ -21,6 +24,7 @@ class Connector:
                         if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                             self.running = self.game.click_move()
                             if not self.running:
+                                time.sleep(5)
                                 break
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.game.pick()
@@ -28,6 +32,7 @@ class Connector:
             else:
                 self.running = self.game.update_board()
                 if not self.running:
+                    time.sleep(5)
                     break
                 piece, new_position, promoted = self.ai.move(self.game.black_pieces, self.game.white_pieces, self.game.last_move)
                 self.game.piece = piece
@@ -37,6 +42,7 @@ class Connector:
                     break
                 self.running = self.game.move(promoted)
                 if not self.running:
+                    time.sleep(5)
                     break
                 self.turn = self.game.turn
                 

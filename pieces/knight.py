@@ -2,7 +2,7 @@ from pieces.piece import Piece
 
 class Knight(Piece):
     def __init__(self, position, whose_piece, color = None, image = None, controller = None):
-        super().__init__(position, whose_piece, color, image, controller)
+        super().__init__(position, whose_piece, color, image, controller, 3)
 
     def type_to_string(self):
         return "Knight"
