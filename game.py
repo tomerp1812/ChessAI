@@ -4,7 +4,6 @@ from pieces.king import King
 from pieces.queen import Queen
 from pieces.knight import Knight
 from pieces.rook import Rook
-import time
 
 
 class Game:

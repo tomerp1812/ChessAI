@@ -1,6 +1,6 @@
 from pieces.piece import Piece
 from check import am_i_in_check
-import copy
+
 
 class King(Piece):
     def __init__(self, position, whose_piece, color = None, image = None, controller = None):

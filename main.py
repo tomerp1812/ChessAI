@@ -17,8 +17,6 @@ def main():
         return
     board = Board(width, height, num_of_squares, controller)
     game = Game(controller, board)
-    # randomai = RandomAi()
-    # simpleai = SimpleAi()
     if not ai:
         connector = Connector(game, controller)
     else:    

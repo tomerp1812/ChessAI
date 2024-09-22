@@ -1,6 +1,5 @@
 from Ai.ai import Ai
 import numpy as np
-import copy
 from pieces.pawn import Pawn
 from pieces.knight import Knight
 from pieces.bishop import Bishop
