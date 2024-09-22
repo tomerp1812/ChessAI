@@ -1,7 +1,7 @@
 import time
 
 class Connector:
-    def __init__(self, ai, game, controller):
+    def __init__(self, game, controller, ai = None):
         self.controller = controller
         self.ai = ai
         self.game = game
@@ -28,7 +28,8 @@ class Connector:
                                 break
                     if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                         self.game.pick()
-                self.turn = self.game.turn
+                if self.ai:
+                    self.turn = self.game.turn
             else:
                 self.running = self.game.update_board()
                 if not self.running:
