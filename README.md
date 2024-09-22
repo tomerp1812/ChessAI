@@ -13,6 +13,12 @@ This is a fully functional Chess game built with Pygame, offering both Human vs 
   - Special rules: **en passant**, **castling**, **promotion**, **threefold repetition**, and **50-move rule**.
 - **Move assistance for human players**: When a piece is selected, all possible moves are shown on the board.
 
+<img src="https://github.com/user-attachments/assets/1c5862a0-2ab5-439b-a5a5-123465fd04e6" width="200" height="200">
+<img src="https://github.com/user-attachments/assets/91a07078-5880-4809-abcf-cdb564f582a4" width="200" height="200">
+<img src="https://github.com/user-attachments/assets/7ffa7b43-b5dd-4817-9e15-881ae0cafed8" width="200" height="200">
+<img src="https://github.com/user-attachments/assets/fbe9cfae-5ec0-437f-ade8-46a40acf5506" width="200" height="200">
+
+
 ## Installation
 1. Clone the repository:
    ```bash
