@@ -1,4 +1,6 @@
 import pygame
+import os
+import sys
 
 class Controller:
     _self = None
@@ -20,18 +22,23 @@ class Controller:
         self.big_font = pygame.font.Font('freesansbold.ttf', 50)
         self.init_images()
         
+    def resource_path(self, relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_path, relative_path)
+
     def init_images(self):
         self.images = {}
-        self.images["white_king"] = self.pygame.image.load("./pieces_images/white-king.png")
-        self.images["white_queen"] = self.pygame.image.load("./pieces_images/white-queen.png")
-        self.images["white_rook"] = self.pygame.image.load("./pieces_images/white-rook.png")
-        self.images["white_bishop"] = self.pygame.image.load("./pieces_images/white-bishop.png")
-        self.images["white_knight"] = self.pygame.image.load("./pieces_images/white-knight.png")
-        self.images["white_pawn"] = self.pygame.image.load("./pieces_images/white-pawn.png")
+        self.images["white_king"] = self.pygame.image.load(self.resource_path("pieces_images/white-king.png"))
+        self.images["white_queen"] = self.pygame.image.load(self.resource_path("pieces_images/white-queen.png"))
+        self.images["white_rook"] = self.pygame.image.load(self.resource_path("pieces_images/white-rook.png"))
+        self.images["white_bishop"] = self.pygame.image.load(self.resource_path("pieces_images/white-bishop.png"))
+        self.images["white_knight"] = self.pygame.image.load(self.resource_path("pieces_images/white-knight.png"))
+        self.images["white_pawn"] = self.pygame.image.load(self.resource_path("pieces_images/white-pawn.png"))
         
-        self.images["black_king"] = self.pygame.image.load("./pieces_images/black-king.png")
-        self.images["black_queen"] = self.pygame.image.load("./pieces_images/black-queen.png")
-        self.images["black_rook"] = self.pygame.image.load("./pieces_images/black-rook.png")
-        self.images["black_bishop"] = self.pygame.image.load("./pieces_images/black-bishop.png")
-        self.images["black_knight"] = self.pygame.image.load("./pieces_images/black-knight.png")
-        self.images["black_pawn"] = self.pygame.image.load("./pieces_images/black-pawn.png")
+        self.images["black_king"] = self.pygame.image.load(self.resource_path("pieces_images/black-king.png"))
+        self.images["black_queen"] = self.pygame.image.load(self.resource_path("pieces_images/black-queen.png"))
+        self.images["black_rook"] = self.pygame.image.load(self.resource_path("pieces_images/black-rook.png"))
+        self.images["black_bishop"] = self.pygame.image.load(self.resource_path("pieces_images/black-bishop.png"))
+        self.images["black_knight"] = self.pygame.image.load(self.resource_path("pieces_images/black-knight.png"))
+        self.images["black_pawn"] = self.pygame.image.load(self.resource_path("pieces_images/black-pawn.png"))
