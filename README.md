@@ -21,21 +21,21 @@ This is a fully functional Chess game built with Pygame, offering both Human vs 
    ```
 2. Install the dependencies:
    ```bash
-   pip install pygame
+   pipenv install
    ```
 3. Run the game:
    ```bash
-   python main.py
+   pipenv run python main.py
    ```
 
 ## How to Play
 1. Menu: After starting the game, you'll be presented with a menu where you can choose your opponent:
-    - Random AI: Plays random moves.
-    - Simple AI: Uses a more advanced strategy based on the minimax algorithm with alpha-beta pruning.
-    - Human: Play against another human.
-2. Game Controls:
-    - Human players: Click on a piece to see its valid moves. Click again to move the piece to the desired square.
-    - The game automatically handles check, checkmate, and draw conditions (threefold repetition, 50-move rule, stalemate).
+  * Random AI: Plays random moves.
+  * Simple AI: Uses a more advanced strategy based on the minimax algorithm with alpha-beta pruning.
+  * Human: Play against another human.
+3. Game Controls:
+  * Human players: Click on a piece to see its valid moves. Click again to move the piece to the desired square.
+  * The game automatically handles check, checkmate, and draw conditions (threefold repetition, 50-move rule, stalemate).
 
-## Contributers
+## Contributors
 https://github.com/tomerp1812
