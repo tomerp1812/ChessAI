@@ -37,7 +37,7 @@ This is a fully functional Chess game built with Pygame, offering both Human vs 
 ## How to Play
 1. Menu: After starting the game, you'll be presented with a menu where you can choose your opponent:
   * Random AI: Plays random moves.
-  * Simple AI: Uses a more advanced strategy based on the minimax algorithm with alpha-beta pruning.
+  * Simple AI: Uses a more advanced strategy based on the minimax algorithm with alpha-beta pruning. 
   * Human: Play against another human.
 3. Game Controls:
   * Human players: Click on a piece to see its valid moves. Click again to move the piece to the desired square.
