@@ -2,8 +2,8 @@ from pieces.piece import Piece
 from check import am_i_in_check
 
 class Pawn(Piece):
-    def __init__(self, position, whose_piece, color = None, image = None, controller = None):
-        super().__init__(position, whose_piece, color, image, controller, 1)
+    def __init__(self, position, color, image):
+        super().__init__(position, color, image)
         
     def type_to_string(self):
         return "Pawn"

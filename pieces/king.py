@@ -3,9 +3,9 @@ from check import am_i_in_check
 
 
 class King(Piece):
-    def __init__(self, position, whose_piece, color = None, image = None, controller = None):
+    def __init__(self, position, color, image):
         self.my_rooks_dictionary = {}
-        super().__init__(position, whose_piece, color, image, controller, 1000)
+        super().__init__(position, color, image)
           
     def init_first_move(self, king_first_move):
         self.king_first_move = king_first_move
