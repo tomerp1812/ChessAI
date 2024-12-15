@@ -1,14 +1,27 @@
 from check import am_i_in_check
+from pieces.drawable import Drawable
 # self, position, whose_piece, color = None, image = None, controller = None
-class Piece:
+class Piece(Drawable):
     def __init__(self, position, color = None, image = None):
         self.color = color
         self.position = position
         self.image = image
-        self.optional_moves = []
-        self.own_pieces_positions = []
-        self.capturable_pieces_positions = []
+        self.alive = True
+        # self.optional_moves = []
+        # self.own_pieces_positions = []
+        # self.capturable_pieces_positions = []
 
+    def draw(self, screen):
+        if self.alive:
+            scaled_position = (self.position[0] * 100, self.position[1] * 100)
+            screen.blit(self.image, scaled_position)
+    
+    def getColor(self):
+        return self.color
+    
+    def setPosition(self, position):
+        self.position = position
+    
     def getPosition(self):
         return self.position
         

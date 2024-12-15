@@ -17,10 +17,10 @@ class Bishop(Piece):
         optional_moves = []
 
         for i in range(1, 8):
-            optional_moves.append(self.position[0] + i, self.position[1] + i)
-            optional_moves.append(self.position[0] + i, self.position[1] - i)
-            optional_moves.append(self.position[0] - i, self.position[1] + i)
-            optional_moves.append(self.position[0] - i, self.position[1] - i)
+            optional_moves.append((self.position[0] + i, self.position[1] + i))
+            optional_moves.append((self.position[0] + i, self.position[1] - i))
+            optional_moves.append((self.position[0] - i, self.position[1] + i))
+            optional_moves.append((self.position[0] - i, self.position[1] - i))
             # up_right_position = self.position[0] + i, self.position[1] + i
             # up_left_position = self.position[0] + i, self.position[1] - i
             # down_right_position = self.position[0] - i, self.position[1] + i

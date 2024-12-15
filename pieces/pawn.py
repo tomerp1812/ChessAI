@@ -3,6 +3,7 @@ from check import am_i_in_check
 
 class Pawn(Piece):
     def __init__(self, position, color, image):
+        self.pawn_first_move = True
         super().__init__(position, color, image)
         
     def type_to_string(self):
@@ -32,23 +33,45 @@ class Pawn(Piece):
                 self.position = old_position
                 self.own_pieces_positions.remove((last_move[2][0], pos[1]))
                 self.own_pieces_positions.append(old_position)
+                
+    def move(self, new_position):
+        self.pawn_first_move = False
+        super().move(new_position)
 
-    def move_options(self, white_pieces, black_pieces, last_move):
-        self.optional_moves = []
-        self.whose_pieces(white_pieces, black_pieces)
-        if self.whose_piece == "white":
-            self.check_pawn_move((self.position[0], self.position[1] - 1), white_pieces, black_pieces)
-            ## if pawn is at starting position, it can move 2 spaces
-            if self.position[1] == 6 and (self.position[0], self.position[1] - 1) in self.optional_moves:
-                self.check_pawn_move((self.position[0], self.position[1] - 2), white_pieces, black_pieces)
-            self.check_capturing((self.position[0] + 1, self.position[1] - 1), white_pieces, black_pieces)
-            self.check_capturing((self.position[0] - 1, self.position[1] - 1), white_pieces, black_pieces)
-            self.an_passant(last_move, black_pieces, (1, 2, 3))
+    def move_options(self):
+        optional_moves = []
+        
+        if self.color == 'white':
+            optional_moves.append((self.position[0], self.position[1] - 1))
+            if self.pawn_first_move:
+                optional_moves.append((self.position[0], self.position[1] - 2))
+            optional_moves.append((self.position[0] + 1, self.position[1] - 1))
+            optional_moves.append((self.position[0] - 1, self.position[1] - 1))
         else:
-            self.check_pawn_move((self.position[0], self.position[1] + 1), white_pieces, black_pieces)
-            if self.position[1] == 1 and (self.position[0], self.position[1] + 1) in self.optional_moves:
-                self.check_pawn_move((self.position[0], self.position[1] + 2), white_pieces, black_pieces)
-            self.check_capturing((self.position[0] + 1, self.position[1] + 1), white_pieces, black_pieces)
-            self.check_capturing((self.position[0] - 1, self.position[1] + 1), white_pieces, black_pieces)
-            self.an_passant(last_move, white_pieces, (6, 5, 4))
-        return self.optional_moves
+            optional_moves.append((self.position[0], self.position[1] + 1))
+            # first move option
+            if self.pawn_first_move:
+                optional_moves.append((self.position[0], self.position[1] + 2))
+            # capture
+            optional_moves.append((self.position[0] + 1, self.position[1] + 1))
+            optional_moves.append((self.position[0] - 1, self.position[1] + 1))
+        
+        # self.optional_moves = []
+        # self.whose_pieces(white_pieces, black_pieces)
+        # if self.whose_piece == "white":
+        #     self.check_pawn_move((self.position[0], self.position[1] - 1), white_pieces, black_pieces)
+        #     ## if pawn is at starting position, it can move 2 spaces
+        #     if self.position[1] == 6 and (self.position[0], self.position[1] - 1) in self.optional_moves:
+        #         self.check_pawn_move((self.position[0], self.position[1] - 2), white_pieces, black_pieces)
+        #     self.check_capturing((self.position[0] + 1, self.position[1] - 1), white_pieces, black_pieces)
+        #     self.check_capturing((self.position[0] - 1, self.position[1] - 1), white_pieces, black_pieces)
+        #     self.an_passant(last_move, black_pieces, (1, 2, 3))
+        # else:
+        #     self.check_pawn_move((self.position[0], self.position[1] + 1), white_pieces, black_pieces)
+        #     if self.position[1] == 1 and (self.position[0], self.position[1] + 1) in self.optional_moves:
+        #         self.check_pawn_move((self.position[0], self.position[1] + 2), white_pieces, black_pieces)
+        #     self.check_capturing((self.position[0] + 1, self.position[1] + 1), white_pieces, black_pieces)
+        #     self.check_capturing((self.position[0] - 1, self.position[1] + 1), white_pieces, black_pieces)
+        #     self.an_passant(last_move, white_pieces, (6, 5, 4))
+        # return self.optional_moves
+        return optional_moves

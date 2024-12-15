@@ -20,14 +20,14 @@ class Queen(Piece):
         # down_left = True
 
         for i in range(1, 8):
-            optional_moves.append(self.position[0] + i, self.position[1])
-            optional_moves.append(self.position[0] - i, self.position[1])
-            optional_moves.append(self.position[0], self.position[1] + i)
-            optional_moves.append(self.position[0], self.position[1] - i)
-            optional_moves.append(self.position[0] + i, self.position[1] + i)
-            optional_moves.append(self.position[0] + i, self.position[1] - i)
-            optional_moves.append(self.position[0] - i, self.position[1] + i)
-            optional_moves.append(self.position[0] - i, self.position[1] - i)
+            optional_moves.append((self.position[0] + i, self.position[1]))
+            optional_moves.append((self.position[0] - i, self.position[1]))
+            optional_moves.append((self.position[0], self.position[1] + i))
+            optional_moves.append((self.position[0], self.position[1] - i))
+            optional_moves.append((self.position[0] + i, self.position[1] + i))
+            optional_moves.append((self.position[0] + i, self.position[1] - i))
+            optional_moves.append((self.position[0] - i, self.position[1] + i))
+            optional_moves.append((self.position[0] - i, self.position[1] - i))
             # up_position = self.position[0] + i, self.position[1]
             # down_position = self.position[0] - i, self.position[1]
             # right_position = self.position[0], self.position[1] + i

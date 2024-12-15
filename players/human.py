@@ -18,11 +18,10 @@ class Human(Player):
         
         
     def move(self):
-        for event in self.controller.pygame.event.get():
-            if event.type == self.controller.pygame.QUIT:
-                return None, False
-            
-            if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
-                return self.get_position(), True
-            
-        return None, True
+        while True:
+            for event in self.controller.pygame.event.get():
+                if event.type == self.controller.pygame.QUIT:
+                    return None, False
+                
+                if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
+                    return self.get_position(), True

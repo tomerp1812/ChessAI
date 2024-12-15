@@ -7,9 +7,13 @@ class Painter(Listener):
         self.controller = controller
         self.num_of_squares = num_of_squares
     
-    def update(self):
+    def update(self, optional_moves = None):
+        self.controller.screen.fill("saddlebrown")
         self.paintBoard()
         self.paintPieces()
+        if optional_moves:
+            self.show_optional_moves(optional_moves)
+        self.controller.pygame.display.flip()
 
     
     def show_optional_moves(self, optional_moves):
@@ -23,16 +27,12 @@ class Painter(Listener):
                         ),
                         10,
                     )
-        self.controller.pygame.display.flip()
+        
     
     def paintPieces(self):
         for pieces in self.pieces:
             for piece in pieces:
-                position = piece.getPosition()
-                scaled_position = (position[0] * 100, position[1] * 100)
-                self.controller.screen.blit(piece.image, scaled_position)
-                
-        self.controller.pygame.display.flip()
+                piece.draw(self.controller.screen)
             
      # draw main game board
     def paintBoard(self):
