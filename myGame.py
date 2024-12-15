@@ -1,5 +1,8 @@
 
 from pieces.knight import Knight
+from pieces.queen import Queen
+from pieces.bishop import Bishop
+from pieces.rook import Rook
 
 class MyGame:
     def __init__(self, player1, player2, pieces, painter):
@@ -49,14 +52,15 @@ class MyGame:
         return pieces_dictionary
     
     
+    # main function
     def run(self):
         while self.running:
             self.notify(self.optional_moves)
             if not self.piece:
-                position, self.running = self.currentPlayer.move()
+                position, self.running = self.currentPlayer.click()
                 self.selectPiece(position)
             else:
-                position, self.running = self.currentPlayer.move()
+                position, self.running = self.currentPlayer.click()
                 if position and position in self.optional_moves:
                     self.updateState(position)
                 else:
@@ -95,7 +99,15 @@ class MyGame:
             del captured_piece
         
         self.currentPiecesDictionary.pop(old_position)
-        self.currentPiecesDictionary[position] = self.piece
+        if self.piece.type_to_string() == "Pawn" and (position[1] == 7 or position[1] == 0):
+            promoted_piece = self.promotePawn(position)
+            self.currentPiecesDictionary[position] = promoted_piece
+            self.piece.alive = False
+            del self.piece
+            self.piece = promoted_piece
+            self.painter.addPiece(promoted_piece)
+        else:
+            self.currentPiecesDictionary[position] = self.piece
         self.last_move = (self.piece, old_position)
         # check if castles
         if self.castle(position):
@@ -120,6 +132,33 @@ class MyGame:
         self.swap_rooks()
         self.piece = None
         self.optional_moves = None
+
+    def promotePawn(self, position):
+        if position[1] == 7:
+            color = "black"
+        else:
+            color = "white"
+        self.painter.draw_promotion_options(color)
+        clicked, self.running = self.currentPlayer.click()
+        
+        if 0 <= clicked[0] <= 3 and 0 <= clicked[1] <= 3:
+            #queen
+            image = self.painter.getImage(color + "_queen")
+            new_piece = Queen(position, color, image)
+        elif 0 <= clicked[0] <= 3:
+            #bishop
+            image = self.painter.getImage(color + "_bishop")
+            new_piece = Bishop(position, color, image)
+        elif 0 <= clicked[1] <= 3:
+            #rook
+            image = self.painter.getImage(color + "_rook")
+            new_piece = Rook(position, color, image)
+        else:
+            #knight
+            image = self.painter.getImage(color + "_knight")
+            new_piece = Knight(position, color, image)
+        return new_piece
+            
 
     def castle(self, position):
         if self.piece.type_to_string() == "King":

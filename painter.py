@@ -3,10 +3,16 @@ from listener import Listener
 class Painter(Listener):
     
     def __init__(self, pieces, controller, num_of_squares):
-        self.pieces = pieces
+        self.pieces = pieces[0] + pieces[1]
         self.controller = controller
         self.num_of_squares = num_of_squares
     
+    def getImage(self, piece_name):
+        return self.controller.pygame.transform.scale(self.controller.images[piece_name], (100, 100))
+        
+    def addPiece(self, piece):
+        self.pieces.append(piece)    
+        
     def update(self, optional_moves = None):
         self.controller.screen.fill("saddlebrown")
         self.paintBoard()
@@ -30,9 +36,8 @@ class Painter(Listener):
         
     
     def paintPieces(self):
-        for pieces in self.pieces:
-            for piece in pieces:
-                piece.draw(self.controller.screen)
+        for piece in self.pieces:
+            piece.draw(self.controller.screen)
             
      # draw main game board
     def paintBoard(self):
@@ -49,6 +54,7 @@ class Painter(Listener):
                 
                 
     def draw_promotion_options(self, color):
+        self.controller.screen.fill("white")
         self.controller.pygame.draw.rect(self.controller.screen, 'saddlebrown', [0, 0, 395, 395])
         self.controller.pygame.draw.rect(self.controller.screen, 'saddlebrown', [405, 0, 395, 395])
         self.controller.pygame.draw.rect(self.controller.screen, 'saddlebrown', [0, 405, 395, 395])
@@ -64,3 +70,5 @@ class Painter(Listener):
             self.controller.screen.blit(self.controller.pygame.transform.scale(self.controller.images["black_rook"], (300, 300)), (455, 50))
             self.controller.screen.blit(self.controller.pygame.transform.scale(self.controller.images["black_bishop"], (300, 300)), (50, 455))
             self.controller.screen.blit(self.controller.pygame.transform.scale(self.controller.images["black_knight"], (300, 300)), (455, 455))
+        
+        self.controller.pygame.display.flip()

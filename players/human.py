@@ -17,7 +17,7 @@ class Human(Player):
         return (index_x, index_y)
         
         
-    def move(self):
+    def click(self):
         while True:
             for event in self.controller.pygame.event.get():
                 if event.type == self.controller.pygame.QUIT:
@@ -25,3 +25,6 @@ class Human(Player):
                 
                 if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                     return self.get_position(), True
+                
+    def move(self):
+        pass
