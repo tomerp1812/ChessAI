@@ -4,7 +4,7 @@ from Ai.randomAi import RandomAi
 from Ai.simpleAi import SimpleAi
 from menu import Menu
 from painter import Painter
-from myGame import MyGame
+from game import Game
 from create_pieces import create_pieces
 from players.human import Human
 
@@ -17,7 +17,7 @@ def main():
     painter = Painter(pieces, controller, num_of_squares)
     player1 = Human(controller)
     player2 = Human(controller)
-    game = MyGame(player1, player2, pieces, painter)
+    game = Game(player1, player2, pieces, painter)
     game.run()
     # menu = Menu(controller)
     # ai, human = menu.show()

@@ -3,9 +3,8 @@ from pieces.knight import Knight
 from pieces.queen import Queen
 from pieces.bishop import Bishop
 from pieces.rook import Rook
-import time
 
-class MyGame:
+class Game:
     def __init__(self, player1, player2, pieces, painter):
         self.player1 = player1
         self.player2 = player2 

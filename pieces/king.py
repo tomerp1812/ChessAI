@@ -2,6 +2,7 @@ from pieces.piece import Piece
 
 class King(Piece):
     def __init__(self, position, color, image):
+        self.king_first_move = True
         super().__init__(position, color, image)
         
     def type_to_string(self):
