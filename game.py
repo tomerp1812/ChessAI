@@ -3,6 +3,7 @@ from pieces.knight import Knight
 from pieces.queen import Queen
 from pieces.bishop import Bishop
 from pieces.rook import Rook
+import time
 
 class Game:
     def __init__(self, player1, player2, pieces, painter):
@@ -71,14 +72,6 @@ class Game:
         while self.running:
             self.notify(self.optional_moves)
             if not self.piece:
-                if self.checkEnd():
-                    if self.checkMate():
-                        print("Player Won!")
-                    else:
-                        print("Tie!")
-                    self.running = False
-                    break
-                
                 position, self.running = self.currentPlayer.click()
                 self.selectPiece(position)
             else:
@@ -86,6 +79,14 @@ class Game:
                 if position and position in self.optional_moves:
                     # num of repetitions
                     self.updateState(position)
+                    if self.checkEnd():
+                        time.sleep(3)
+                        if self.checkMate():
+                            print("Player Won!")
+                        else:
+                            print("Tie!")
+                        self.running = False
+                        break
                 else:
                     self.selectPiece(position) 
     
