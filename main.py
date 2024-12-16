@@ -1,8 +1,6 @@
 # from board import Board
 from controller import Controller
-from game import Game
 from Ai.randomAi import RandomAi
-from connector import Connector
 from Ai.simpleAi import SimpleAi
 from menu import Menu
 from painter import Painter
