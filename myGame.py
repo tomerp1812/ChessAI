@@ -3,6 +3,7 @@ from pieces.knight import Knight
 from pieces.queen import Queen
 from pieces.bishop import Bishop
 from pieces.rook import Rook
+import time
 
 class MyGame:
     def __init__(self, player1, player2, pieces, painter):
@@ -31,6 +32,9 @@ class MyGame:
         self.piece = None
         self.optional_moves = None
         self.last_move = None
+        self.states = {}
+        self.fiftyRuleMove = 0
+        self.currentState = self.state()
        
     def find_king(self, pieces):
         for piece in pieces:
@@ -52,23 +56,69 @@ class MyGame:
         return pieces_dictionary
     
     
+    def state(self):
+        current_pieces = sorted([(p.type_to_string(), p.getPosition(), p.color) for p in self.currentPiecesDictionary.values()])
+        opponent_pieces = sorted([(p.type_to_string(), p.getPosition(), p.color) for p in self.opponentPiecesDictionary.values()])
+        
+        kingsMoves = [self.my_king.king_first_move, self.opp_king.king_first_move]
+        
+        rookMoves = [rook.rook_first_move for rook in self.my_rooks + self.opp_rooks]
+        
+        state = (tuple(current_pieces), tuple(opponent_pieces), tuple(kingsMoves), tuple(rookMoves))
+        return state
+    
     # main function
     def run(self):
         while self.running:
             self.notify(self.optional_moves)
             if not self.piece:
+                if self.checkEnd():
+                    if self.checkMate():
+                        print("Player Won!")
+                    else:
+                        print("Tie!")
+                    self.running = False
+                    break
+                
                 position, self.running = self.currentPlayer.click()
                 self.selectPiece(position)
             else:
                 position, self.running = self.currentPlayer.click()
                 if position and position in self.optional_moves:
+                    # num of repetitions
                     self.updateState(position)
                 else:
                     self.selectPiece(position) 
     
-    def capture(self, position, old_position):
-        if self.piece.type_to_string() == "Pawn":
-            if self.checkEnPassant(position, old_position):
+    # if player is in check and also has no legal moves he is in mate
+    def checkMate(self):
+        if self.checkCheck():
+            return False
+        return True
+       
+    # if player has no legal moves it means the game is over                
+    def checkEnd(self):
+        # save last state
+        numOfRepetitions = 1
+        if self.currentState in self.states:
+            numOfRepetitions = self.states[self.currentState]
+        self.states[self.currentState] = numOfRepetitions + 1
+        
+        if numOfRepetitions == 3:
+            return True
+        
+        if self.fiftyRuleMove == 50:
+            return True
+        
+        for position, piece in list(self.currentPiecesDictionary.items()):
+            if self.optionalMoves(position, piece):
+                return False
+        
+        return True
+    
+    def capture(self, position, old_position, piece):
+        if piece.type_to_string() == "Pawn":
+            if self.checkEnPassant(position, old_position, piece):
                 dist = 0
                 if position[1] > old_position[1]:
                     dist = -1
@@ -93,11 +143,18 @@ class MyGame:
     # happens only after a move is played!        
     def updateState(self, position):
         old_position = self.piece.getPosition()
-        captured_piece = self.capture(position, old_position)
+        captured_piece = self.capture(position, old_position, self.piece)
         # check if piece is captured
         if captured_piece is not None:
+            self.fiftyRuleMove = 0
             del captured_piece
-        
+        else:
+            # fiftyRulemove
+            if self.piece.type_to_string != "Pawn":
+                self.fiftyRuleMove += 1
+            else:
+                self.fiftyRuleMove = 0
+                
         self.currentPiecesDictionary.pop(old_position)
         if self.piece.type_to_string() == "Pawn" and (position[1] == 7 or position[1] == 0):
             promoted_piece = self.promotePawn(position)
@@ -130,6 +187,7 @@ class MyGame:
         self.my_king = self.kings[self.playerId]
         self.opp_king = self.kings[1 - self.playerId]
         self.swap_rooks()
+        self.currentState = self.state()
         self.piece = None
         self.optional_moves = None
 
@@ -181,14 +239,14 @@ class MyGame:
         
         if position in self.currentPiecesDictionary:
                     self.piece = self.currentPiecesDictionary[position]
-                    self.optional_moves = self.optionalMoves(position)
+                    self.optional_moves = self.optionalMoves(position, self.piece)
                     if not bool(self.optional_moves):
                         self.piece = None
                         self.optional_moves = None            
                     
-    def optionalMoves(self, position):
+    def optionalMoves(self, position, piece):
         # retrieve all theoretical optional moves for that piece
-        theoretical_moves = self.piece.move_options()
+        theoretical_moves = piece.move_options()
         optional_moves = []
         blockades = []
         
@@ -200,22 +258,22 @@ class MyGame:
                 blockades.append(theoretical_move)
                 continue
             
-            if self.piece.type_to_string() == "Pawn":
-                if self.checkEnPassant(theoretical_move, position):
+            if piece.type_to_string() == "Pawn":
+                if self.checkEnPassant(theoretical_move, position, piece):
                     optional_moves.append(theoretical_move)
                     continue
                 
-                elif theoretical_move[0] != self.piece.getPosition()[0]:                
+                elif theoretical_move[0] != piece.getPosition()[0]:                
                     if theoretical_move not in self.opponentPiecesDictionary:
                         continue
                     
                 # pawn can't walk into opponent piece 
-                elif theoretical_move[0] == self.piece.getPosition()[0] and \
+                elif theoretical_move[0] == piece.getPosition()[0] and \
                     theoretical_move in self.opponentPiecesDictionary:
                         blockades.append(theoretical_move)
                         continue
                 
-            elif self.piece.type_to_string() == "King":    
+            elif piece.type_to_string() == "King":    
                 if theoretical_move[0] - 2 == position[0]:
                     # short castle
                     if not self.checkCastle(True, position):
@@ -230,20 +288,37 @@ class MyGame:
                 
             optional_moves.append(theoretical_move)   
                 
-        if self.piece.type_to_string() != "Knight":
+        if piece.type_to_string() != "Knight":
             optional_moves = self.checkBlockades(optional_moves, blockades, position)
         
         legal_moves = []
         for optional_move in optional_moves:
-            if self.checkCheck(optional_move, position):
+            piece, capturedPiece = self.simulate_next_position(position, optional_move)
+            if self.checkCheck():
                 legal_moves.append(optional_move)
+            self.revert_next_position(piece, position, optional_move, capturedPiece)
                
                 
         return legal_moves   
         
+    def simulate_next_position(self, position, optional_move):
+        piece = self.currentPiecesDictionary[position]
+        self.currentPiecesDictionary.pop(position)
+        self.currentPiecesDictionary[optional_move] = piece
+        piece.setPosition(optional_move)
+        capturedPiece = self.capture(optional_move, position, piece)
+        return piece, capturedPiece
+
+    def revert_next_position(self, piece, position, optional_move, capturedPiece):
+        piece.setPosition(position)    
+        self.currentPiecesDictionary.pop(optional_move)
+        self.currentPiecesDictionary[position] = piece
+        if capturedPiece:
+            self.revertCapture(optional_move, capturedPiece)
+    
       
-    def checkEnPassant(self, move, position):
-        if move[0] != self.piece.getPosition()[0]:
+    def checkEnPassant(self, move, position, piece):
+        if move[0] != piece.getPosition()[0]:
             # if pawn moved last move
             if self.last_move and self.last_move[0].type_to_string() == "Pawn":
                 # if the pawn move exactly 2 squeres, i.e first move.
@@ -281,17 +356,14 @@ class MyGame:
                 if option in self.currentPiecesDictionary or option in self.opponentPiecesDictionary:
                     return False
             # can't castle through check
-            if not self.checkCheck(option, position):
+            piece, capturedPiece = self.simulate_next_position(position, option)
+            if not self.checkCheck():
                 return False
+            self.revert_next_position(piece, position, option, capturedPiece)
            
         return True
             
-    def checkCheck(self, optional_move, position):
-        piece = self.currentPiecesDictionary[position]
-        self.currentPiecesDictionary.pop(position)
-        self.currentPiecesDictionary[optional_move] = piece
-        piece.setPosition(optional_move)
-        capturedPiece = self.capture(optional_move, position)
+    def checkCheck(self):
         valid = True
         directions = [
             (0, 1),   # up
@@ -332,11 +404,6 @@ class MyGame:
         if self.knightCheck():
             valid = False
               
-        piece.setPosition(position)    
-        self.currentPiecesDictionary.pop(optional_move)
-        self.currentPiecesDictionary[position] = piece
-        if capturedPiece:
-            self.revertCapture(optional_move, capturedPiece)
         return valid
          
          
@@ -385,22 +452,6 @@ class MyGame:
         if check[0] < 0 or check[0] > 7 or check[1] < 0 or check[1] > 7:
             return True
         return False
-    
-    
-    
-    
-    # def run_human(self):
-    #     if self.piece:
-    #         self.currentPlayer.move()
-    #     else:
-    #         self.currentPlayer.click()
-    
-    # def run_Ai(self):
-    #     pass
-                             
-                             
-    # def show_optional_moves(self, optional_moves):
-    #     self.painter.show_optional_moves(optional_moves)
         
     def notify(self, optional_moves):
         self.painter.update(optional_moves)
