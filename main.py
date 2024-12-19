@@ -7,11 +7,13 @@ from painter import Painter
 from game import Game
 from create_pieces import create_pieces
 from players.human import Human
+from fen import Fen
 
 def main():
     width = 800
     height = 800
     num_of_squares = 64
+    fen = Fen()
     controller = Controller(width, height)
     pieces = create_pieces(controller)
     painter = Painter(pieces, controller, num_of_squares)

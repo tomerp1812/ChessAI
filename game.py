@@ -71,24 +71,39 @@ class Game:
     def run(self):
         while self.running:
             self.notify(self.optional_moves)
-            if not self.piece:
+            
+            if self.currentPlayer.me() == "Human":
+                self.runHuman()
+            elif self.currentPlayer.me() == "Ai":
+                self.runAi()
+    
+    def isEnd(self):
+        if self.checkEnd():
+            time.sleep(3)
+            if self.checkMate():
+                print("Player Won!")
+            else:
+                print("Tie!")
+            self.running = False
+                    
+    def runHuman(self):
+        if not self.piece:
                 position, self.running = self.currentPlayer.click()
                 self.selectPiece(position)
+        else:
+            position, self.running = self.currentPlayer.click()
+            if position and position in self.optional_moves:
+                # num of repetitions
+                self.updateState(position)
+                self.isEnd()
             else:
-                position, self.running = self.currentPlayer.click()
-                if position and position in self.optional_moves:
-                    # num of repetitions
-                    self.updateState(position)
-                    if self.checkEnd():
-                        time.sleep(3)
-                        if self.checkMate():
-                            print("Player Won!")
-                        else:
-                            print("Tie!")
-                        self.running = False
-                        break
-                else:
-                    self.selectPiece(position) 
+                self.selectPiece(position) 
+    
+    def runAi(self):
+        move = self.currentPlayer.move(self.currentState)
+        if move:
+            self.updateState(move)
+            self.isEnd()
     
     # if player is in check and also has no legal moves he is in mate
     def checkMate(self):
@@ -156,6 +171,7 @@ class Game:
                 self.fiftyRuleMove = 0
                 
         self.currentPiecesDictionary.pop(old_position)
+        promoted_piece = None
         if self.piece.type_to_string() == "Pawn" and (position[1] == 7 or position[1] == 0):
             promoted_piece = self.promotePawn(position)
             self.currentPiecesDictionary[position] = promoted_piece
@@ -453,5 +469,5 @@ class Game:
             return True
         return False
         
-    def notify(self, optional_moves):
+    def notify(self, optional_moves = None):
         self.painter.update(optional_moves)

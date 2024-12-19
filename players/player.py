@@ -7,5 +7,5 @@ class Player(ABC):
         pass
     
     @abstractmethod
-    def move(self, pieces):
+    def move(self, state):
         pass
