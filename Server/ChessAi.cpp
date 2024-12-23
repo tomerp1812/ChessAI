@@ -1,8 +1,11 @@
 #include "ChessAi.h"
-#include "lookup.cpp"
-#include "Logic.cpp"
 #include<limits>
 #include <iostream>
+#include <string>
+#include <vector>
+#include "Logic.h"
+#include "PosRepresentations.h"
+
 
 using namespace std;
 
@@ -21,24 +24,25 @@ double ChessAi::evaluate(){
     return 0.0;
 }
 
-bool ChessAi::terminate(vector<Move> optionalMoves, int depth){
+bool ChessAi::terminate(std::vector<Move> optionalMoves, int depth){
     if(depth <= 0 || optionalMoves.size() == 0){
         return true;
     }
     return false;
 }
 
-MoveVal ChessAi::search(int* board){
+MoveVal ChessAi::search(posRepresent* representation){
     double alpha = -1 * numeric_limits<double>::infinity();
     double beta = numeric_limits<double>::infinity();
     double value = -1 * numeric_limits<double>::infinity();
     int depth = 3;
     Logic* logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves();
+    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
+    cout << optionalMoves.size() << endl;
     MoveVal moveVal;
     moveVal.move = "";
     for(Move move: optionalMoves){
-        double val = minValue(alpha, beta, depth);
+        double val = minValue(representation, alpha, beta, depth);
 
         if(moveVal.move == ""){
             moveVal.move = "somestring"; // change!!
@@ -58,17 +62,17 @@ MoveVal ChessAi::search(int* board){
     return moveVal;
 }
 
-double ChessAi::maxValue(double alpha, double beta, unsigned int depth){
+double ChessAi::maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth){
     double value = -1 * numeric_limits<double>::infinity();
     Logic* logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves();
+    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
 
     if(terminate(optionalMoves, depth)){
         return evaluate();
     }
 
     for(Move move: optionalMoves){
-        double val = minValue(alpha, beta, depth - 1);
+        double val = minValue(representation, alpha, beta, depth - 1);
         if(val >= value){
             value = val;
         }
@@ -86,17 +90,17 @@ double ChessAi::maxValue(double alpha, double beta, unsigned int depth){
     
 }
 
-double ChessAi::minValue(double alpha, double beta, unsigned int depth){
+double ChessAi::minValue(posRepresent* representation, double alpha, double beta, unsigned int depth){
     double value = numeric_limits<double>::infinity();
     Logic* logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves();
+    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
 
     if(terminate(optionalMoves, depth)){
         return evaluate();
     }
 
     for(Move move: optionalMoves){
-        double val = maxValue(alpha, beta, depth - 1);
+        double val = maxValue(representation, alpha, beta, depth - 1);
         if(val >= value){
             value = val;
         }
@@ -114,9 +118,11 @@ double ChessAi::minValue(double alpha, double beta, unsigned int depth){
 }
 
 string ChessAi::run(string state){
-    int* board = this->posRep->fenToBoard(state);
-    string bestMove = search(board).move;
-    delete board;
+    posRepresent* representation = this->posRep->fenToBoard(state);
+    string bestMove = search(representation).move;
+    delete representation->board;
+    delete representation->castle;
+    delete representation;
     return bestMove;
 }
 

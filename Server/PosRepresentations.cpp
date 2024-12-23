@@ -1,63 +1,156 @@
 #include "PosRepresentations.h"
+#include <string>
 #include <bits/stdc++.h>
-PosRepresentations::PosRepresentations(){
-    //implement
+
+PosRepresentations::PosRepresentations()
+{
+    // implement
 }
 
-int* PosRepresentations::fenToBoard(std::string fenNotation){
+posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
+{
     int len = fenNotation.length();
     char arr[len + 1];
     strcpy(arr, fenNotation.c_str());
-    int* board = new int[64];
+    int *board = new int[64];
+    int myKing;
+    int oppKing;
+    unsigned long long int blockers = 0;
+    unsigned long long int friends = 0;
+    unsigned long long int enemies = 0;
+    char turn; // w is white, b is black
+    char castle[4] = {'.','.','.','.'};
+    int enPassant = -1;
+    int halfMove;
+    int fullMove;
     int i = 0;
     int j = 0;
 
     std::map<char, int> charToInt = {
-        { 'p', 1 },
-        { 'n', 2 },
-        { 'b', 3 },
-        { 'r', 4 },
-        { 'q', 5 },
-        { 'k', 6 },
-        { 'P', 8 },
-        { 'N', 9 },
-        { 'B', 10 },
-        { 'R', 11 },
-        { 'Q', 12 },
-        { 'K', 13 },
+        {'p', -1},
+        {'n', -2},
+        {'b', -3},
+        {'r', -4},
+        {'q', -5},
+        {'k', -6},
+        {'P', 1},
+        {'N', 2},
+        {'B', 3},
+        {'R', 4},
+        {'Q', 5},
+        {'K', 6},
     };
 
-    for(char c : arr){
-        if(c == ' '){
+    char *token = strtok(arr, " ");
+    int part = 0;
+    while (token != NULL)
+    {
+        std::string tokenStr = std::string(token);
+        switch (part)
+        {
+            // board
+        case 0:
+            for (char c : tokenStr)
+            {
+                if (c == '/')
+                {
+                    i++;
+                    j = 0;
+                }
+                else if (c >= '1' && c <= '9')
+                {
+                    int loop = c - '0';
+                    for (int k = 0; k < loop; k++)
+                    {
+                        int t = (((7 - i) * 8) + (j + k));
+                        board[t] = 0;
+                    }
+                    j += loop;
+                }
+                else
+                {
+                    int t = (((7 - i) * 8) + j);
+                    board[t] = charToInt[c];
+                    blockers |= (1ULL << t);
+                    if(charToInt[c] > 0){
+                        if(c == 'K'){
+                            myKing = t;
+                        }
+                        friends |= (1ULL << t);
+                    }else{
+                        if(c == 'k'){
+                            oppKing = t;
+                        }
+                        enemies |= (1ULL << t);
+                    }
+                    j++;
+                }
+            }
+            break;
+        case 1:
+        // turns
+            turn = *token;
+            if(turn == 'b'){
+                unsigned long long int tmp = friends;
+                friends = enemies;
+                enemies = friends;
+                int tmpKing = myKing;
+                myKing = oppKing;
+                oppKing = tmpKing;
+            }
+            break;
+        case 2:
+        // castling
+            for(int i = 0; i < strlen(token); i++){
+                if(token[i] == 'K'){
+                    castle[0] = 'K';
+                }else if(token[i] == 'Q'){
+                    castle[1] = 'Q';
+                }else if(token[i] == 'k'){
+                    castle[2] = 'k';
+                }else if(token[i] == 'q'){
+                    castle[3] = 'q';
+                }
+            }
+            break;
+        case 3:
+        // en-passant
+            if(strcmp(token, "-") != 0){
+                char c1 = token[0];
+                char c2 = token[1];
+                enPassant = (8 * (c2 - '1') + (c1 - 'a'));
+            }
+            break;
+
+        case 4:
+        // half moves
+        halfMove = atoi(token);
+        break;
+
+        case 5:
+        // full move
+        fullMove = atoi(token);
+        break;
+        default:
             break;
         }
-        else if(c == '/'){
-            i++;
-            j = 0;
-        }else if(c >= '1' && c <= '9'){
-            int loop = c - '0';
-            for(int k = 0; k < loop; k++){
-                board[(i * 8) + (j + k)] = 0;
-            }
-            j = j + loop;
-        }else{
-            board[(i * 8) + j] = charToInt[c];
-            j++;
-        }
+        part++;
+        token = strtok(NULL, " ");
     }
 
-    return board;
-    
+    posRepresent* posRep = new posRepresent();
+    posRep->board = board;
+    posRep->myKing = myKing;
+    posRep->oppKing = oppKing;
+    posRep->blockers = blockers;
+    posRep->friends = friends;
+    posRep->enemies = enemies;
+    posRep->castle = new char[4]{castle[0], castle[1], castle[2], castle[3]};
+    posRep->enPassant = enPassant;
+    posRep->fullMove = fullMove;
+    posRep->halfMove = halfMove;
+    posRep->turn = turn;
+
+
+    return posRep;
 }
-
-
-// def fen_to_board(self):
-//         # get's the board pieces, each / means new row.
-//         rows = self.fen.split()[0].split("/")
-//         board = [list(self.expand_row(row)) for row in rows]
-//         return board
-
-// def expand_row(self, row):
-//         # if it is number it means how many squares are empty and we put '.' there on all those squares
-//         # otherwise it is a piece.
-//         return "".join(char if not char.isdigit() else "." * int(char) for char in row)

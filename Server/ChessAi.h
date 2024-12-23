@@ -1,8 +1,12 @@
 #ifndef CHESSAI_H
 #define CHESSAI_H
+
 #include <string>
-#include <iostream>
-#include "PosRepresentations.h"
+#include <vector>
+
+class PosRepresentations;
+struct posRepresent;
+struct Move;
 
 struct MoveVal
 {
@@ -19,11 +23,11 @@ class ChessAi {
         ChessAi(PosRepresentations posRep);
         ~ChessAi();
         double evaluate();
-        MoveVal search(int* board);
+        MoveVal search(posRepresent* board);
         std::string run(std::string state);
-        double minValue(double alpha, double beta, unsigned int depth);
-        double maxValue(double alpha, double beta, unsigned int depth);
-        bool terminate(vector<Move> optionalMoves, int depth);
+        double minValue(posRepresent* representation, double alpha, double beta, unsigned int depth);
+        double maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth);
+        bool terminate(std::vector<Move> optionalMoves, int depth);
 };
 
 #endif

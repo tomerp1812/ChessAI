@@ -1,5 +1,8 @@
 
 #include "Communicator.h"
+#include "PosRepresentations.h"
+#include "ChessAi.h"
+
 using namespace std;
 
 int main(){

@@ -1,5 +1,6 @@
 #include "Communicator.h"
-
+#include <iostream>
+#include "ChessAi.h"
 
 using namespace std;
 

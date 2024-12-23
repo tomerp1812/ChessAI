@@ -216,14 +216,27 @@ int main()
 {
   srand(time(NULL));
   int square;
+  // Print the rmask for each square
+  printf("const uint64 RMask[64] = {\n");
+  for (square = 0; square < 64; square++) {
+    printf("  0x%llx,\n", rmask(square));  // Printing the rmask value
+  }
+  printf("};\n\n");
+
+  // Print the bmask for each square
+  printf("const uint64 BMask[64] = {\n");
+  for (square = 0; square < 64; square++) {
+    printf("  0x%llx,\n", bmask(square));  // Printing the bmask value
+  }
+  printf("};\n\n");
   printf("const uint64 RMagic[64] = {\n");
   for (square = 0; square < 64; square++)
-    printf("  0x%llx\n", find_magic(square, RBits[square], 0));
+    printf("  0x%llx,\n", find_magic(square, RBits[square], 0));
   printf("};\n\n");
 
   printf("const uint64 BMagic[64] = {\n");
   for (square = 0; square < 64; square++)
-    printf("  0x%llx\n", find_magic(square, BBits[square], 1));
+    printf("  0x%llx,\n", find_magic(square, BBits[square], 1));
   printf("};\n\n");
 
   return 0;
