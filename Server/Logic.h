@@ -41,6 +41,9 @@ public:
     void queenOptionalMoves(std::vector<Move>& moves, int start, posRepresent *posRep);
     void kingOptionalMoves(std::vector<Move>& moves, int start, posRepresent *posRep);
     void pawnOptionalMoves(std::vector<Move>& moves, int start, posRepresent *posRep);
+    bool checkMove(int start, int targetSquare, posRepresent *posRep);
+    void addMove(std::vector<Move>& moves, int start, int targetSquare);
+    bool checkCastling(char castle, char checkCastle, posRepresent *posRep, unsigned long long int castlingBlockers, int castleSquares[2], int start);
 };
 
 #endif

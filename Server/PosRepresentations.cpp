@@ -15,7 +15,6 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
     int *board = new int[64];
     int myKing;
     int oppKing;
-    unsigned long long int blockers = 0;
     unsigned long long int friends = 0;
     unsigned long long int enemies = 0;
     char turn; // w is white, b is black
@@ -71,7 +70,6 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
                 {
                     int t = (((7 - i) * 8) + j);
                     board[t] = charToInt[c];
-                    blockers |= (1ULL << t);
                     if(charToInt[c] > 0){
                         if(c == 'K'){
                             myKing = t;
@@ -93,7 +91,7 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
             if(turn == 'b'){
                 unsigned long long int tmp = friends;
                 friends = enemies;
-                enemies = friends;
+                enemies = tmp;
                 int tmpKing = myKing;
                 myKing = oppKing;
                 oppKing = tmpKing;
@@ -142,9 +140,9 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
     posRep->board = board;
     posRep->myKing = myKing;
     posRep->oppKing = oppKing;
-    posRep->blockers = blockers;
     posRep->friends = friends;
     posRep->enemies = enemies;
+    posRep->blockers = (friends | enemies);
     posRep->castle = new char[4]{castle[0], castle[1], castle[2], castle[3]};
     posRep->enPassant = enPassant;
     posRep->fullMove = fullMove;

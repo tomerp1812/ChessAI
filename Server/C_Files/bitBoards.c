@@ -87,6 +87,29 @@ uint64 bPawnBitBoard(int square) {
     return ans;
 }
 
+uint64 nBitBoard(int square) {
+    uint64 ans = 0;
+    int row = square / 8;
+    int col = square % 8;
+
+    // All possible knight moves relative to the current square
+    int knightMoves[8][2] = {
+        {-2, -1}, {-1, -2}, {1, -2}, {2, -1}, 
+        {2, 1}, {1, 2}, {-1, 2}, {-2, 1}
+    };
+
+    for (int i = 0; i < 8; i++) {
+        int newRow = row + knightMoves[i][0];
+        int newCol = col + knightMoves[i][1];
+        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+            ans |= (1ULL << (newRow * 8 + newCol));
+        }
+    }
+
+    return ans;
+}
+
+
 
 int main(){
     printf("const unsigned long long int RAttacks[64] = {\n");
@@ -134,5 +157,13 @@ int main(){
         printf("  0x%llx,\n", bPawnBitBoard(square));
     }
     printf("};\n\n");
+
+    printf("const unsigned long long int NAttacks[64] = {\n");
+
+    for(int square = 0; square < 64; square++){
+        printf("  0x%llx,\n", nBitBoard(square));
+    }
+    printf("};\n\n");
+
     
 }

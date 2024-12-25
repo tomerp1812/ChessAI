@@ -4,6 +4,7 @@ extern const unsigned long long int QAttacks[64];
 extern const unsigned long long int KAttacks[64];
 extern const unsigned long long int WPAttacks[64];
 extern const unsigned long long int BPAttacks[64];
+extern const unsigned long long int NAttacks[64];
 
 // extern const unsigned long long int PAttacks[64];
 // extern const unsigned long long int RMask[64];
