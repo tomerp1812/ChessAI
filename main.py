@@ -7,6 +7,7 @@ from painter import Painter
 from game import Game
 from create_pieces import create_pieces
 from players.human import Human
+from players.ai import Ai
 from fen import Fen
 
 def main():
@@ -18,8 +19,8 @@ def main():
     pieces = create_pieces(controller)
     painter = Painter(pieces, controller, num_of_squares)
     player1 = Human(controller)
-    player2 = Human(controller)
-    game = Game(player1, player2, pieces, painter)
+    player2 = Ai()
+    game = Game(player1, player2, pieces, painter, fen)
     game.run()
     # menu = Menu(controller)
     # ai, human = menu.show()

@@ -25,6 +25,3 @@ class Human(Player):
                 
                 if event.type == self.controller.pygame.MOUSEBUTTONDOWN:
                     return self.get_position(), True
-                
-    def move(self, state):
-        pass

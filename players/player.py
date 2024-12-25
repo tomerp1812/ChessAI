@@ -6,6 +6,3 @@ class Player(ABC):
     def me(self):
         pass
     
-    @abstractmethod
-    def move(self, state):
-        pass

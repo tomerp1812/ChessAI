@@ -109,8 +109,8 @@ void Communicator::communicate()
             }
             else
             {
-                cout << ai->run(receivedData) << endl;
-                responseBuffer = "OK!";
+                string response = ai->run(receivedData);
+                responseBuffer = response.c_str();
             }
 
             int sbyteCount = send(acceptSocket, responseBuffer, strlen(responseBuffer), 0);

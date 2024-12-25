@@ -13,6 +13,7 @@
                 "ChessAi.cpp", 
                 "Communicator.cpp", 
                 "lookup.cpp",
+                "evaluator.cpp",
                 "-o", 
                 "server.exe",
                 "-std=c++17",

@@ -246,11 +246,10 @@ bool Logic::checkMove(int start, int targetSquare, posRepresent *posRep)
     posRep->friends &= ~(1ULL << start);
     posRep->friends |= (1ULL << targetSquare);
 
-    if (saveTarget != 0)
-    {
-        // Remove captured enemy
-        posRep->enemies &= ~(1ULL << targetSquare);
-    }
+
+    // Remove captured enemy
+    posRep->enemies &= ~(1ULL << targetSquare);
+
     posRep->blockers = (posRep->friends | posRep->enemies);
 
     bool isLegal = legalPosition(posRep);
@@ -278,18 +277,25 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
     if (posRep->turn == 'w')
     {
         pawnMoves = WPAttacks[start];
-        // enPassant
-        if (posRep->enPassant != -1)
-        {
-            // checks if en-Passant is possible for the current pawn
-            if (pawnMoves & (1ULL << posRep->enPassant))
+        // checks if en-Passant is possible for the current pawn
+        if (posRep->enPassant != -1 && (pawnMoves & (1ULL << posRep->enPassant)))
+        {  
+            //remove enemy pawn
+            int targetPosition = posRep->enPassant - 8;
+            int target = -1;
+
+            posRep->enemies &= ~(1ULL << targetPosition);
+            posRep->board[targetPosition] = 0;
+            posRep->blockers = (posRep->friends | posRep->enemies);
+            if (checkMove(start, posRep->enPassant, posRep))
             {
-                if (checkMove(start, posRep->enPassant, posRep))
-                {
-                    //add en-Passant
-                    addMove(moves, start, posRep->enPassant);
-                }
+                //add en-Passant
+                addMove(moves, start, posRep->enPassant);
             }
+            //restore enemy pawn
+            posRep->enemies |= (1ULL << targetPosition);
+            posRep->board[targetPosition] = target;
+            posRep->blockers = (posRep->friends | posRep->enemies);
         }
 
         // if there are no enemies on the attacks there is nothing to capture.
@@ -315,20 +321,27 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
     {
         pawnMoves = BPAttacks[start];
 
-        // enPassant
-        if (posRep->enPassant != -1)
+        // checks if en-Passant is possible for the current pawn
+        if (posRep->enPassant != -1 && (pawnMoves & (1ULL << posRep->enPassant)))
         {
-            // checks if en-Passant is possible for the current pawn
-            if (pawnMoves & (1ULL << posRep->enPassant))
+            //remove enemy pawn
+            int targetPosition = posRep->enPassant + 8;
+            int target = 1;
+
+            posRep->enemies &= ~(1ULL << targetPosition);
+            posRep->board[targetPosition] = 0;
+            posRep->blockers = (posRep->friends | posRep->enemies);
+            if (checkMove(start, posRep->enPassant, posRep))
             {
-                if (checkMove(start, posRep->enPassant, posRep))
-                {
-                    //add en-Passant
-                    addMove(moves, start, posRep->enPassant);
-                }
+                //add en-Passant
+                addMove(moves, start, posRep->enPassant);
             }
+            //restore enemy pawn
+            posRep->enemies |= (1ULL << targetPosition);
+            posRep->board[targetPosition] = target;
+            posRep->blockers = (posRep->friends | posRep->enemies);
         }
-        
+
         pawnMoves &= posRep->enemies;
 
         if (!(posRep->blockers & (1ULL << (start - 8))))

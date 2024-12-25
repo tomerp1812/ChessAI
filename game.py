@@ -6,7 +6,7 @@ from pieces.rook import Rook
 import time
 
 class Game:
-    def __init__(self, player1, player2, pieces, painter):
+    def __init__(self, player1, player2, pieces, painter, fen):
         self.player1 = player1
         self.player2 = player2 
         self.players = [self.player1, self.player2]
@@ -35,6 +35,7 @@ class Game:
         self.states = {}
         self.fiftyRuleMove = 0
         self.currentState = self.state()
+        self.fen = fen
        
     def find_king(self, pieces):
         for piece in pieces:
@@ -100,9 +101,10 @@ class Game:
                 self.selectPiece(position) 
     
     def runAi(self):
-        move = self.currentPlayer.move(self.currentState)
+        move = self.currentPlayer.move(self.fen.getFen())
         if move:
-            self.updateState(move)
+            self.selectPiece(move[0])
+            self.updateState(move[1])
             self.isEnd()
     
     # if player is in check and also has no legal moves he is in mate
@@ -181,7 +183,9 @@ class Game:
             self.painter.addPiece(promoted_piece)
         else:
             self.currentPiecesDictionary[position] = self.piece
+            
         self.last_move = (self.piece, old_position)
+      
         # check if castles
         if self.castle(position):
             # short castle
@@ -196,6 +200,7 @@ class Game:
                 self.my_long_rook.move((position[0] + 1, position[1]))
                 
         self.piece.move(position)
+        self.fen.update_move(self.last_move, promoted_piece)
         self.playerId = 1 - self.playerId
         self.currentPlayer = self.players[self.playerId]
         self.currentPiecesDictionary = self.players_dictionaries[self.playerId]
