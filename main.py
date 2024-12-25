@@ -18,7 +18,7 @@ def main():
     controller = Controller(width, height)
     pieces = create_pieces(controller)
     painter = Painter(pieces, controller, num_of_squares)
-    player1 = Human(controller)
+    player1 = Ai()
     player2 = Ai()
     game = Game(player1, player2, pieces, painter, fen)
     game.run()

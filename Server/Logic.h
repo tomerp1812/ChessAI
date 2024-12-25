@@ -8,6 +8,7 @@ struct Move
 {
     int startPos;
     int targetPos;
+    int promotedPiece = 0;
 };
 
 class Logic
@@ -18,6 +19,7 @@ private:
     static int numOfSquaresToEdge[64][8];
     static int knightMovesToEdge[64][8];
     static int kingMovesToEdge[64][8];
+    int promotionPieces[4];
     void (Logic::*optionalMovesArr[6])(std::vector<Move>& moves, int start, posRepresent *posRep);
     bool (Logic::*attacksArr[6])(int start, int target, int piece);
 
@@ -43,6 +45,7 @@ public:
     void pawnOptionalMoves(std::vector<Move>& moves, int start, posRepresent *posRep);
     bool checkMove(int start, int targetSquare, posRepresent *posRep);
     void addMove(std::vector<Move>& moves, int start, int targetSquare);
+    void addMove(std::vector<Move> &moves, int start, int targetSquare, int coefficient);
     bool checkCastling(char castle, char checkCastle, posRepresent *posRep, unsigned long long int castlingBlockers, int castleSquares[2], int start);
 };
 

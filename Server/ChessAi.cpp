@@ -75,8 +75,9 @@ void ChessAi::save(posRepresent *representation, Move move, savePosition& sp)
         if (move.targetPos > move.startPos)
         {
             sp.otherPiecePosition = move.targetPos + 1;
-            // queen side castling
+            
         }
+        // queen side castling
         else
         {
             sp.otherPiecePosition = move.targetPos - 1;
@@ -105,10 +106,8 @@ void ChessAi::save(posRepresent *representation, Move move, savePosition& sp)
     }
 }
 
-bool ChessAi::update(posRepresent *representation, Move move)
+void ChessAi::update(posRepresent *representation, Move move)
 {
-    bool promotion = false;
-
     representation->halfMove++;
     if(representation->board[move.targetPos] != 0){
         representation->halfMove = 0;
@@ -188,8 +187,8 @@ bool ChessAi::update(posRepresent *representation, Move move)
                 representation->enemies &= ~(1ULL << (move.targetPos + 8));
             }
         // promotion
-        }else if(move.targetPos > 55 || move.targetPos < 8){
-            promotion = true;
+        }else if(move.promotedPiece != 0){
+            representation->board[move.targetPos] = move.promotedPiece;
         }
     }
     // rook
@@ -232,8 +231,6 @@ bool ChessAi::update(posRepresent *representation, Move move)
     unsigned long long int friends = representation->friends;
     representation->friends = representation->enemies;
     representation->enemies = friends;
-
-    return promotion;
 }
 
 void ChessAi::restore(posRepresent *representation, savePosition& sp){
@@ -263,7 +260,7 @@ MoveVal ChessAi::search(posRepresent *representation)
 {
     double alpha = -1 * numeric_limits<double>::infinity();
     double beta = numeric_limits<double>::infinity();
-    int depth = 6;
+    int depth = 3;
     Logic *logic = new Logic();
     vector<Move> optionalMoves = logic->getOptionalMoves(representation);
     cout << optionalMoves.size() << endl;
@@ -274,7 +271,7 @@ MoveVal ChessAi::search(posRepresent *representation)
     {
         this->counter++;
         save(representation, move, sp);
-        bool promotion = update(representation, move);
+        update(representation, move);
         double val = minValue(representation, alpha, beta, depth);
         restore(representation, sp);
         if (moveVal.value < val)
@@ -308,7 +305,7 @@ double ChessAi::maxValue(posRepresent *representation, double alpha, double beta
     {
         this->counter++;
         save(representation, move, sp);
-        bool promotion = update(representation, move);
+        update(representation, move);
         double val = minValue(representation, alpha, beta, depth - 1);
         restore(representation, sp);
         if (val >= value)
@@ -343,7 +340,7 @@ double ChessAi::minValue(posRepresent *representation, double alpha, double beta
     {
         this->counter++;
         save(representation, move, sp);
-        bool promotion = update(representation, move);
+        update(representation, move);
         double val = maxValue(representation, alpha, beta, depth - 1);
         restore(representation, sp);
         if (val >= value)

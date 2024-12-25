@@ -1,6 +1,7 @@
 #include "evaluator.h"
 #include <limits>
 #include "PosRepresentations.h"
+#include <unordered_set>
 
 
 Evaluator::Evaluator(){
@@ -34,4 +35,8 @@ double Evaluator::evaluate(posRepresent *representation, std::vector<Move>& opti
 
     return val;
     
+}
+
+void Evaluator::reorderMoves(posRepresent *representation, std::vector<Move>& optionalMoves){
+
 }

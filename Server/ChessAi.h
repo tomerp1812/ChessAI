@@ -48,7 +48,7 @@ class ChessAi {
         double maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth);
         bool terminate(std::vector<Move> optionalMoves, int depth);
         void save(posRepresent* representation, Move move, savePosition& sp);
-        bool update(posRepresent* representation, Move move);
+        void update(posRepresent* representation, Move move);
         void restore(posRepresent* representation, savePosition& sp);
         std::string moveToString(Move move);
 };

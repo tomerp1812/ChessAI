@@ -19,7 +19,11 @@ int Logic::knightMovesToEdge[64][8];
 int Logic::kingMovesToEdge[64][8];
 
 Logic::Logic()
-{
+{ 
+    this->promotionPieces[0] = 2; // knight
+    this->promotionPieces[0] = 3; // bishop
+    this->promotionPieces[0] = 4; // rook
+    this->promotionPieces[0] = 5; // queen
     this->attacksArr[0] = &Logic::pawnAttack;
     this->attacksArr[1] = &Logic::knightAttack;
     this->attacksArr[2] = &Logic::bishopAttack;
@@ -271,6 +275,15 @@ void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare)
     moves.push_back(move);
 }
 
+void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare, int coefficient){
+    for(int i = 0; i < 4; i++){
+        Move move;
+        move.startPos = start;
+        move.targetPos = targetSquare;
+        move.promotedPiece = coefficient * this->promotionPieces[i];
+    }
+}
+
 void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
 {
     unsigned long long int pawnMoves;
@@ -366,7 +379,17 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
 
         if (checkMove(start, targetSquare, posRep))
         {
-            addMove(moves, start, targetSquare);
+            // white pawn promotion
+            if(posRep->turn == 'w' && targetSquare > 55){
+                addMove(moves, start, targetSquare, 1);
+            }
+            // black pawn promotion
+            else if(posRep->turn == 'b' && targetSquare < 8){
+                addMove(moves, start, targetSquare, -1);
+            }else{
+                addMove(moves, start, targetSquare);
+            }
+            
         }
     }
 }

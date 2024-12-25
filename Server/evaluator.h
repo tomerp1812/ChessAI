@@ -13,6 +13,7 @@ class Evaluator{
         Evaluator();
         ~Evaluator();
         double evaluate(posRepresent* representation, std::vector<Move>& optionalMoves);
+        void reorderMoves(posRepresent *representation, std::vector<Move>& optionalMoves);
 };
 
 

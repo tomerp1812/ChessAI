@@ -115,7 +115,7 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
             if(strcmp(token, "-") != 0){
                 char c1 = token[0];
                 char c2 = token[1];
-                enPassant = (8 * (7 - (c2 - '1'))) + (c1 - 'a');
+                enPassant = (8 * (c2 - '1') + (c1 - 'a'));
             }
             break;
 

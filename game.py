@@ -104,7 +104,10 @@ class Game:
         move = self.currentPlayer.move(self.fen.getFen())
         if move:
             self.selectPiece(move[0])
-            self.updateState(move[1])
+            if(len(move) == 3):
+                self.updateState(move[1], move[2])
+            else:
+                self.updateState(move[1])
             self.isEnd()
     
     # if player is in check and also has no legal moves he is in mate
@@ -158,7 +161,7 @@ class Game:
         piece.alive = True  
             
     # happens only after a move is played!        
-    def updateState(self, position):
+    def updateState(self, position, promotion = None):
         old_position = self.piece.getPosition()
         captured_piece = self.capture(position, old_position, self.piece)
         # check if piece is captured
@@ -175,7 +178,7 @@ class Game:
         self.currentPiecesDictionary.pop(old_position)
         promoted_piece = None
         if self.piece.type_to_string() == "Pawn" and (position[1] == 7 or position[1] == 0):
-            promoted_piece = self.promotePawn(position)
+            promoted_piece = self.promotePawn(position, promotion)
             self.currentPiecesDictionary[position] = promoted_piece
             self.piece.alive = False
             del self.piece
@@ -212,13 +215,27 @@ class Game:
         self.piece = None
         self.optional_moves = None
 
-    def promotePawn(self, position):
+    def promotePawn(self, position, promotion = None):
         if position[1] == 7:
             color = "black"
         else:
             color = "white"
         self.painter.draw_promotion_options(color)
-        clicked, self.running = self.currentPlayer.click()
+        if promotion:
+            if promotion == 'q':
+                clicked[0] = 0
+                clicked[1] = 0
+            elif promotion == 'n':
+                clicked[0] = 4
+                clicked[1] = 4
+            elif promotion == 'r':
+                clicked[0] = 4
+                clicked[1] = 0
+            elif promotion == 'b':
+                clicked[0] = 0
+                clicked[1] = 4
+        else:
+            clicked, self.running = self.currentPlayer.click()
         
         if 0 <= clicked[0] <= 3 and 0 <= clicked[1] <= 3:
             #queen
@@ -418,7 +435,12 @@ class Game:
                 if (x, y) in self.opponentPiecesDictionary:
                     opp_piece = self.opponentPiecesDictionary[(x, y)]
                     if king_position in opp_piece.move_options():
-                        valid = False
+                        if opp_piece.type_to_string() == "Pawn":
+                            if abs(opp_piece.position[0] - king_position[0]) == 1 and \
+                                abs(opp_piece.position[1] - king_position[1]) == 1:
+                                    valid = False
+                        else:
+                            valid = False
                     break
           
         

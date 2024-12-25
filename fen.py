@@ -142,7 +142,11 @@ class Fen:
         self.enPassant = '-'
         # if pawn moved exactly 2 squared last turn
         if piece.lower() == 'p' and abs(y2 - y1) == 2:
-            self.enPassant = f"{chr(x1 + 97)}{(y1 + y2) // 2 + 1}"
+            if y1 == 1:
+                numEnPassant = 6
+            elif y1 == 6:
+                numEnPassant = 3
+            self.enPassant = f"{chr(x1 + 97)}{numEnPassant}"
         
         if piece.lower() == 'p' or target != ".":
             self.halfMove = 0
