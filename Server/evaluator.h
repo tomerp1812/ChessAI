@@ -5,10 +5,12 @@
 struct Move;
 struct posRepresent;
 #include <vector>
+#include <unordered_map>
+
 
 class Evaluator{
     private:
-
+        std::unordered_map<int, int> pieceToVal;
     public:
         Evaluator();
         ~Evaluator();

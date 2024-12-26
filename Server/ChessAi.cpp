@@ -9,7 +9,7 @@
 
 using namespace std;
 
-ChessAi::ChessAi(PosRepresentations posRep, Evaluator evaluator)
+ChessAi::ChessAi(PosRepresentations& posRep, Evaluator& evaluator)
 {
     this->posRep = &posRep;
     this->evaluator = &evaluator;
@@ -80,7 +80,7 @@ void ChessAi::save(posRepresent *representation, Move move, savePosition& sp)
         // queen side castling
         else
         {
-            sp.otherPiecePosition = move.targetPos - 1;
+            sp.otherPiecePosition = move.targetPos - 2;
         }
         
     }
@@ -209,6 +209,17 @@ void ChessAi::update(posRepresent *representation, Move move)
         }
     }
 
+    // capture a potential rook, not able to castle anymore
+    if(move.targetPos == 0){
+        representation->castle[1] = '.';
+    }else if(move.targetPos == 7){
+        representation->castle[0] = '.';
+    }else if(move.targetPos == 56){
+        representation->castle[3] = '.';
+    }else if(move.targetPos == 63){
+        representation->castle[2] = '.';
+    }
+
     // if otherpiece is captured
     representation->enemies &= ~(1ULL << move.targetPos);
 
@@ -297,7 +308,7 @@ double ChessAi::maxValue(posRepresent *representation, double alpha, double beta
 
     if (terminate(optionalMoves, depth))
     {
-        return evaluator->evaluate(representation, optionalMoves);
+        return this->evaluator->evaluate(representation, optionalMoves);
     }
 
     savePosition sp;
@@ -308,10 +319,7 @@ double ChessAi::maxValue(posRepresent *representation, double alpha, double beta
         update(representation, move);
         double val = minValue(representation, alpha, beta, depth - 1);
         restore(representation, sp);
-        if (val >= value)
-        {
-            value = val;
-        }
+        value = max(val, value);
         if (value >= beta)
         {
             delete logic;
@@ -332,7 +340,7 @@ double ChessAi::minValue(posRepresent *representation, double alpha, double beta
 
     if (terminate(optionalMoves, depth))
     {
-        return evaluator->evaluate(representation, optionalMoves);
+        return this->evaluator->evaluate(representation, optionalMoves);
     }
     savePosition sp;
 
@@ -343,10 +351,7 @@ double ChessAi::minValue(posRepresent *representation, double alpha, double beta
         update(representation, move);
         double val = maxValue(representation, alpha, beta, depth - 1);
         restore(representation, sp);
-        if (val >= value)
-        {
-            value = val;
-        }
+        value = min(val, value);
         if (value <= alpha)
         {
             delete logic;
@@ -356,6 +361,7 @@ double ChessAi::minValue(posRepresent *representation, double alpha, double beta
     }
 
     delete logic;
+
     return value;
 }
 
@@ -366,7 +372,26 @@ std::string ChessAi::moveToString(Move move) {
         char rank = '1' + (pos / 8);
         return string(1, file) + string(1, rank);
     };
-    return toAlgebraic(move.startPos) + toAlgebraic(move.targetPos);
+
+    std::string moveString = toAlgebraic(move.startPos) + toAlgebraic(move.targetPos);
+
+    if(move.promotedPiece != 0){
+        char promotion;
+        switch(abs(move.promotedPiece)) {
+            case 2: promotion = 'n';
+                    break;
+            case 3: promotion = 'b';
+                    break;
+            case 4: promotion = 'r';
+                    break;
+            case 5: promotion = 'q';
+                    break;
+            default: return moveString; // error no real promotion
+        }
+
+        moveString += promotion;
+    }
+    return moveString;
 }
 
 string ChessAi::run(string state)

@@ -1,8 +1,6 @@
 # from board import Board
 from controller import Controller
-from Ai.randomAi import RandomAi
-from Ai.simpleAi import SimpleAi
-from menu import Menu
+# from menu import Menu
 from painter import Painter
 from game import Game
 from create_pieces import create_pieces
@@ -19,6 +17,7 @@ def main():
     pieces = create_pieces(controller)
     painter = Painter(pieces, controller, num_of_squares)
     player1 = Ai()
+    # player1 = Human(controller)
     player2 = Ai()
     game = Game(player1, player2, pieces, painter, fen)
     game.run()

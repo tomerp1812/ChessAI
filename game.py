@@ -103,6 +103,7 @@ class Game:
     def runAi(self):
         move = self.currentPlayer.move(self.fen.getFen())
         if move:
+            # time.sleep(0.5)
             self.selectPiece(move[0])
             if(len(move) == 3):
                 self.updateState(move[1], move[2])
@@ -396,6 +397,7 @@ class Game:
             # can't castle through check
             piece, capturedPiece = self.simulate_next_position(position, option)
             if not self.checkCheck():
+                self.revert_next_position(piece, position, option, capturedPiece)
                 return False
             self.revert_next_position(piece, position, option, capturedPiece)
            

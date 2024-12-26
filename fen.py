@@ -100,19 +100,18 @@ class Fen:
            
              
         fen_board = self.board_to_fen()
-        # Switch turn
-        self.turn = "b" if self.turn == "w" else "w"
+        
         
         # checking castling options
         # was white move
-        if self.turn == "b":
+        if self.turn == "w":
             if piece == "K":
                 self.castling = self.castling.replace('K','').replace('Q', '')
             elif piece == "R":
-                if last_move[1] == (0, 0):
-                    self.castling = self.castling.replace('Q','')
-                elif last_move[1] == (7, 0):
-                    self.castling = self.castling.replace('K', '')
+                if last_move[1] == (7, 7):
+                    self.castling = self.castling.replace('K','')
+                elif last_move[1] == (0, 7):
+                    self.castling = self.castling.replace('Q', '')
         # was black move
         else:
             # also to check if turn complited
@@ -120,18 +119,18 @@ class Fen:
             if piece == "k":
                 self.castling = self.castling.replace('k','').replace('q','')
             elif piece == "r":
-                if last_move[1] == (0, 7):
+                if last_move[1] == (7, 0):
                     self.castling = self.castling.replace('q','')
-                elif last_move[1] == (7, 7):
+                elif last_move[1] == (0, 0):
                     self.castling = self.castling.replace('k','')
              
         # if a rook was captured on the starting position     
         if x2 == 0 and y2 == 0:
             self.castling = self.castling.replace('q', '')
         elif x2 == 0 and y2 == 7:
-            self.castling = self.castling.replace('k', '')
-        elif x2 == 7 and y2 == 0:
             self.castling = self.castling.replace('Q', '')
+        elif x2 == 7 and y2 == 0:
+            self.castling = self.castling.replace('k', '')
         elif x2 == 7 and y2 == 7:
             self.castling = self.castling.replace('K', '')
            
@@ -153,4 +152,7 @@ class Fen:
         else:
             self.halfMove += 1
             
+        # Switch turn
+        self.turn = "b" if self.turn == "w" else "w"
+        
         self.fen = f"{fen_board} {self.turn} {self.castling} {self.enPassant} {self.halfMove} {self.fullMove}"

@@ -21,9 +21,9 @@ int Logic::kingMovesToEdge[64][8];
 Logic::Logic()
 { 
     this->promotionPieces[0] = 2; // knight
-    this->promotionPieces[0] = 3; // bishop
-    this->promotionPieces[0] = 4; // rook
-    this->promotionPieces[0] = 5; // queen
+    this->promotionPieces[1] = 3; // bishop
+    this->promotionPieces[2] = 4; // rook
+    this->promotionPieces[3] = 5; // queen
     this->attacksArr[0] = &Logic::pawnAttack;
     this->attacksArr[1] = &Logic::knightAttack;
     this->attacksArr[2] = &Logic::bishopAttack;
@@ -281,6 +281,7 @@ void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare, int c
         move.startPos = start;
         move.targetPos = targetSquare;
         move.promotedPiece = coefficient * this->promotionPieces[i];
+        moves.push_back(move);
     }
 }
 
@@ -558,6 +559,9 @@ std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep)
     {
         int start = __builtin_ctzll(friends);
         int piece = posRep->board[start];
+        if(piece == 0){
+            std::cout << "here" << std::endl;
+        }
         (this->*optionalMovesArr[abs(piece) - 1])(moves, start, posRep);
         friends &= ~(1ULL << start);
     }

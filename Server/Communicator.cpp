@@ -58,7 +58,6 @@ Communicator::~Communicator()
     // closing the socket
     closesocket(this->serverSocket);
     WSACleanup();
-    cout << "here" << endl;
 }
 
 void Communicator::communicate()
@@ -81,9 +80,10 @@ void Communicator::communicate()
             int result = recv(acceptSocket, reinterpret_cast<char *>(sizeBytes), 4, 0);
             if (result != 4)
             {
-                cout << "recv() failed or client disconnected: " << WSAGetLastError() << endl;
+                cout << "recv() failed or client disconnected: " << endl;
                 closesocket(acceptSocket);
-                continue;
+                this->running = false;
+                break;
             }
 
             // little endiean to big endian

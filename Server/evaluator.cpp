@@ -1,11 +1,22 @@
 #include "evaluator.h"
 #include <limits>
+#include <iostream>
 #include "PosRepresentations.h"
-#include <unordered_set>
-
 
 Evaluator::Evaluator(){
-
+    this->pieceToVal[1] = 100; // white pawn
+    this->pieceToVal[2] = 290; // white knight
+    this->pieceToVal[3] = 300; // white bishop
+    this->pieceToVal[4] = 500; // white rook
+    this->pieceToVal[5] = 900; // white queen
+    this->pieceToVal[6] = 10000000; // white king
+    this->pieceToVal[-1] = 100;// black pawn
+    this->pieceToVal[-2] = 290;// black knight
+    this->pieceToVal[-3] = 300;// black bishop
+    this->pieceToVal[-4] = 500;// black rook
+    this->pieceToVal[-5] = 900;// black queen
+    this->pieceToVal[-6] = 10000000;// black king
+    this->pieceToVal[0] = 0; // empty square
 }
 
 Evaluator::~Evaluator(){
@@ -23,13 +34,13 @@ double Evaluator::evaluate(posRepresent *representation, std::vector<Move>& opti
 
     while(friends){
         int position = __builtin_ctzll(friends);
-        val += representation->board[position];
+        val += this->pieceToVal[representation->board[position]];
         friends &= ~(1ULL << position);
     }
 
     while(enemies){
         int position = __builtin_ctzll(enemies);
-        val += representation->board[position];
+        val -= this->pieceToVal[representation->board[position]];
         enemies &= ~(1ULL << position);
     }
 

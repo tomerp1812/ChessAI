@@ -40,7 +40,7 @@ class ChessAi {
         PosRepresentations* posRep;
         Evaluator* evaluator;
     public:
-        ChessAi(PosRepresentations posRep, Evaluator evaluator);
+        ChessAi(PosRepresentations& posRep, Evaluator& evaluator);
         ~ChessAi();
         MoveVal search(posRepresent* board);
         std::string run(std::string state);
