@@ -66,13 +66,13 @@ class Fen:
         if promotion:
             s = promotion.type_to_string()
             if s == "Queen":
-                new_piece = "q" if y1 == 7 else "Q"
+                new_piece = "q" if y2 == 7 else "Q"
             elif s == "Rook":
-                new_piece = "r" if y1 == 7 else "R"
+                new_piece = "r" if y2 == 7 else "R"
             elif s == "Bishop":
-                new_piece = "b" if y1 == 7 else "B"
+                new_piece = "b" if y2 == 7 else "B"
             else:
-                new_piece = "n" if y1 == 7 else "N"
+                new_piece = "n" if y2 == 7 else "N"
             
             self.board[y2][x2] = new_piece
                
@@ -120,9 +120,9 @@ class Fen:
                 self.castling = self.castling.replace('k','').replace('q','')
             elif piece == "r":
                 if last_move[1] == (7, 0):
-                    self.castling = self.castling.replace('q','')
-                elif last_move[1] == (0, 0):
                     self.castling = self.castling.replace('k','')
+                elif last_move[1] == (0, 0):
+                    self.castling = self.castling.replace('q','')
              
         # if a rook was captured on the starting position     
         if x2 == 0 and y2 == 0:

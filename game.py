@@ -221,21 +221,18 @@ class Game:
             color = "black"
         else:
             color = "white"
-        self.painter.draw_promotion_options(color)
+        
         if promotion:
             if promotion == 'q':
-                clicked[0] = 0
-                clicked[1] = 0
+                clicked = (0, 0)
             elif promotion == 'n':
-                clicked[0] = 4
-                clicked[1] = 4
+                clicked = (4, 4)
             elif promotion == 'r':
-                clicked[0] = 4
-                clicked[1] = 0
+                clicked = (4, 0)
             elif promotion == 'b':
-                clicked[0] = 0
-                clicked[1] = 4
+                clicked = (0, 4)
         else:
+            self.painter.draw_promotion_options(color)
             clicked, self.running = self.currentPlayer.click()
         
         if 0 <= clicked[0] <= 3 and 0 <= clicked[1] <= 3:
