@@ -11,18 +11,23 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
     int len = fenNotation.length();
     char arr[len + 1];
     strcpy(arr, fenNotation.c_str());
-    int *board = new int[64];
+    // int *board = new int[64];
     int myKing;
     int oppKing;
     unsigned long long int friends = 0;
     unsigned long long int enemies = 0;
     char turn; // w is white, b is black
-    char castle[4] = {'.','.','.','.'};
+    // char castle[4] = {'.','.','.','.'};
     int enPassant = -1;
     int halfMove;
     int fullMove;
     int i = 0;
     int j = 0;
+    posRepresent* posRep = new posRepresent();
+    posRep->castle[0] = '.';
+    posRep->castle[1] = '.';
+    posRep->castle[2] = '.';
+    posRep->castle[3] = '.';
 
     std::map<char, int> charToInt = {
         {'p', -1},
@@ -61,14 +66,14 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
                     for (int k = 0; k < loop; k++)
                     {
                         int t = (((7 - i) * 8) + (j + k));
-                        board[t] = 0;
+                        posRep->board[t] = 0;
                     }
                     j += loop;
                 }
                 else
                 {
                     int t = (((7 - i) * 8) + j);
-                    board[t] = charToInt[c];
+                    posRep->board[t] = charToInt[c];
                     if(charToInt[c] > 0){
                         if(c == 'K'){
                             myKing = t;
@@ -100,13 +105,13 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
         // castling
             for(int i = 0; i < strlen(token); i++){
                 if(token[i] == 'K'){
-                    castle[0] = 'K';
+                    posRep->castle[0] = 'K';
                 }else if(token[i] == 'Q'){
-                    castle[1] = 'Q';
+                    posRep->castle[1] = 'Q';
                 }else if(token[i] == 'k'){
-                    castle[2] = 'k';
+                    posRep->castle[2] = 'k';
                 }else if(token[i] == 'q'){
-                    castle[3] = 'q';
+                    posRep->castle[3] = 'q';
                 }
             }
             break;
@@ -135,14 +140,13 @@ posRepresent *PosRepresentations::fenToBoard(std::string fenNotation)
         token = strtok(NULL, " ");
     }
 
-    posRepresent* posRep = new posRepresent();
-    posRep->board = board;
+    // posRep->board = board;
     posRep->myKing = myKing;
     posRep->oppKing = oppKing;
     posRep->friends = friends;
     posRep->enemies = enemies;
     posRep->blockers = (friends | enemies);
-    posRep->castle = new char[4]{castle[0], castle[1], castle[2], castle[3]};
+    // posRep->castle = new char[4]{castle[0], castle[1], castle[2], castle[3]};
     posRep->enPassant = enPassant;
     posRep->fullMove = fullMove;
     posRep->halfMove = halfMove;

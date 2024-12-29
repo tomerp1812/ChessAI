@@ -4,7 +4,7 @@
 
 using namespace std;
 
-Communicator::Communicator(int port, ChessAi ai)
+Communicator::Communicator(int port, ChessAi& ai)
 {
     this->ai = &ai;
     this->running = true;

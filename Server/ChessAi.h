@@ -3,10 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "Logic.h"
 
 class PosRepresentations;
 class Evaluator;
+class ZobristHash;
 struct posRepresent;
 struct Move;
 
@@ -37,19 +39,24 @@ struct savePosition
 class ChessAi {
     private:
         int counter;
+        std::unordered_map<unsigned long long int, double> transpositionTable;
         PosRepresentations* posRep;
         Evaluator* evaluator;
+        Logic* logic;
+        ZobristHash* zobrist;
     public:
         ChessAi(PosRepresentations& posRep, Evaluator& evaluator);
         ~ChessAi();
         MoveVal search(posRepresent* board);
         std::string run(std::string state);
-        double minValue(posRepresent* representation, double alpha, double beta, unsigned int depth);
-        double maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth);
+        double minValue(posRepresent* representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
+        double maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
+        // double minValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
+        // double maxValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
         bool terminate(std::vector<Move> optionalMoves, int depth);
-        void save(posRepresent* representation, Move move, savePosition& sp);
-        void update(posRepresent* representation, Move move);
-        void restore(posRepresent* representation, savePosition& sp);
+        void save(const posRepresent* representation, posRepresent& sp);
+        void update(posRepresent* representation, const Move& move);
+        void restore(posRepresent* representation, const posRepresent& sp, const Move& move);
         std::string moveToString(Move move);
 };
 

@@ -115,6 +115,11 @@ class Game:
     def checkMate(self):
         if self.checkCheck():
             return False
+        
+        # still optional moves so it is a tie
+        for position, piece in list(self.currentPiecesDictionary.items()):
+            if self.optionalMoves(position, piece):
+                return False
         return True
        
     # if player has no legal moves it means the game is over                

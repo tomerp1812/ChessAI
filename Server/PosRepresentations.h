@@ -5,17 +5,17 @@
 
 struct posRepresent
 {
-    int *board;
-    int myKing;
-    int oppKing;
     unsigned long long int blockers;
     unsigned long long int friends;
     unsigned long long int enemies;
-    char turn; // w is white, b is black
-    char *castle;
+    int board[64];
+    int myKing;
+    int oppKing;
     int enPassant;
     int halfMove;
     int fullMove;
+    char castle[4];
+    char turn; // w is white, b is black
 };
 
 

@@ -11,7 +11,7 @@ class Communicator{
         bool running;
         ChessAi *ai;
     public:
-        Communicator(int port, ChessAi ai);
+        Communicator(int port, ChessAi& ai);
         ~Communicator();
         void communicate();
 };

@@ -3,22 +3,27 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <chrono>
 #include "Logic.h"
 #include "PosRepresentations.h"
 #include "evaluator.h"
+#include "zobristHash.h"
 
 using namespace std;
+using namespace chrono;
 
 ChessAi::ChessAi(PosRepresentations& posRep, Evaluator& evaluator)
 {
     this->posRep = &posRep;
     this->evaluator = &evaluator;
-    this->counter = 0;
+    this->logic = new Logic();
+    this->zobrist = new ZobristHash();
 }
 
 ChessAi::~ChessAi()
 {
-    // implementation
+    delete this->logic;
+    delete this->zobrist;
 }
 
 bool ChessAi::terminate(std::vector<Move> optionalMoves, int depth)
@@ -30,12 +35,8 @@ bool ChessAi::terminate(std::vector<Move> optionalMoves, int depth)
     return false;
 }
 
-void ChessAi::save(posRepresent *representation, Move move, savePosition& sp)
+void ChessAi::save(const posRepresent *representation, posRepresent& sp)
 {
-    sp.move = move;
-    sp.piece = representation->board[move.startPos];
-    sp.otherPiece = 0;
-    sp.otherPiecePosition = -1;
     sp.myKing = representation->myKing;
     sp.oppKing = representation->oppKing;
     sp.blockers = representation->blockers;
@@ -51,62 +52,13 @@ void ChessAi::save(posRepresent *representation, Move move, savePosition& sp)
         sp.castle[i] = representation->castle[i];
     }
 
-    // save captured piece
-    if (representation->board[move.targetPos] != 0)
-    {
-        sp.otherPiece = representation->board[move.targetPos];
-        sp.otherPiecePosition = move.targetPos;
-        
+    for(int i = 0; i < 64; i++){
+        sp.board[i] = representation->board[i];
     }
-    // castling
-    else if (abs(sp.piece) == 6 && abs((move.targetPos - move.startPos)) == 2)
-    {
-        if (sp.piece > 0)
-        {
-            // white rook
-            sp.otherPiece = 4;
-        }
-        else
-        {
-            // black rook
-            sp.otherPiece = -4;
-        }
-        // king side castling
-        if (move.targetPos > move.startPos)
-        {
-            sp.otherPiecePosition = move.targetPos + 1;
-            
-        }
-        // queen side castling
-        else
-        {
-            sp.otherPiecePosition = move.targetPos - 2;
-        }
-        
-    }
-    // en-Passant
-    else if (abs(sp.piece) == 1)
-    {
-        // this is an en-passant capture
-        if (move.targetPos == representation->enPassant)
-        {
-            if (sp.piece > 0)
-            {
-                // white pawn captures black pawn
-                sp.otherPiece = -1;
-                sp.otherPiecePosition = representation->enPassant - 8;
-            }
-            else
-            {
-                // black pawn captures white pawn
-                sp.otherPiece = 1;
-                sp.otherPiecePosition = representation->enPassant + 8;
-            }
-        }
-    }
+
 }
 
-void ChessAi::update(posRepresent *representation, Move move)
+void ChessAi::update(posRepresent *representation, const Move& move)
 {
     representation->halfMove++;
     if(representation->board[move.targetPos] != 0){
@@ -244,7 +196,7 @@ void ChessAi::update(posRepresent *representation, Move move)
     representation->enemies = friends;
 }
 
-void ChessAi::restore(posRepresent *representation, savePosition& sp){
+void ChessAi::restore(posRepresent* representation,const posRepresent& sp, const Move& move){
     representation->turn = sp.turn;
     representation->halfMove = sp.halfMove;
     representation->fullMove = sp.fullMove;
@@ -256,36 +208,74 @@ void ChessAi::restore(posRepresent *representation, savePosition& sp){
     representation->enemies = sp.enemies;
     representation->blockers = sp.blockers;
 
-
     representation->myKing = sp.myKing;
     representation->oppKing = sp.oppKing;
 
-    representation->board[sp.move.startPos] = sp.piece;
-    representation->board[sp.move.targetPos] = 0;
-    if(sp.otherPiecePosition != -1){
-        representation->board[sp.otherPiecePosition] = sp.otherPiece;
-    }
+    representation->board[move.startPos] = sp.board[move.startPos];
+    representation->board[move.targetPos] = sp.board[move.targetPos];
+
+    // in case of en-passant
+    representation->board[move.startPos + 1] = sp.board[move.startPos + 1];
+    representation->board[move.startPos - 1] = sp.board[move.startPos - 1];
+
+    // in case of castling, short castle
+    representation->board[move.targetPos + 1] = sp.board[move.targetPos + 1];
+    // long castle
+    representation->board[move.targetPos - 2] = sp.board[move.targetPos - 2];
+
 }
 
 MoveVal ChessAi::search(posRepresent *representation)
 {
+    this->counter = 0;
+    auto start = high_resolution_clock::now();
     double alpha = -1 * numeric_limits<double>::infinity();
     double beta = numeric_limits<double>::infinity();
-    int depth = 3;
-    Logic *logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
-    cout << optionalMoves.size() << endl;
+    int depth = 5;
+    
+    vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, false);
+    this->evaluator->reorderMoves(representation, optionalMoves);
+
+    // Initialize Zobrist hash
+    unsigned long long int hash = zobrist->computeZobristHash(*representation);
+     // Track initial position
+    zobrist->recordPosition(hash);
+
+    unsigned long long int updatedHash;
+
     MoveVal moveVal;
     moveVal.value = -1 * numeric_limits<double>::infinity();
-    savePosition sp;
+
+    posRepresent sp;
+    save(representation, sp);
+
     for (Move move : optionalMoves)
     {
         this->counter++;
-        save(representation, move, sp);
+
+        // Update Zobrist hash for the new position
+        updatedHash = zobrist->updateZobristHash(hash, *representation, move);
+        zobrist->recordPosition(updatedHash);
         update(representation, move);
-        double val = minValue(representation, alpha, beta, depth);
-        restore(representation, sp);
-        if (moveVal.value < val)
+        double val;
+        // Check for threefold repetition
+        if (zobrist->isThreefoldRepetition(updatedHash))
+        {
+            val = 0;
+        }else if(this->zobrist->transpositionExists(updatedHash)){
+            val = this->zobrist->transpositionEval(updatedHash);
+        }    
+        else{
+            val = minValue(representation, alpha, beta, depth, updatedHash);
+            this->zobrist->saveTranspositionTable(updatedHash, val, depth);
+        }
+        restore(representation, sp, move);
+        zobrist->undoPosition(updatedHash);
+  
+        // cout << "piece: " << representation->board[move.startPos] << " from: " << move.startPos 
+        // << " to: "<< move.targetPos << " value: " << val << endl; 
+
+        if (moveVal.value <= val)
         {
             moveVal.move = move;
             moveVal.value = val;
@@ -294,76 +284,237 @@ MoveVal ChessAi::search(posRepresent *representation)
         {
             alpha = moveVal.value;
         }
+        
+        
     }
+    auto end = high_resolution_clock::now();
+    cout << duration_cast<seconds>(end - start).count() << '\n';
 
-    delete logic;
+    // record the move
+    zobrist->recordPosition(updatedHash); 
+    this->zobrist->saveTranspositionTable(hash, moveVal.value, depth);
     return moveVal;
 }
 
-double ChessAi::maxValue(posRepresent *representation, double alpha, double beta, unsigned int depth)
+double ChessAi::maxValue(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash)
 {
     double value = -1 * numeric_limits<double>::infinity();
-    Logic *logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
+    vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, false);
+    
 
-    if (terminate(optionalMoves, depth))
+    if(optionalMoves.size() == 0){
+        // lost - legalPosition returns false if in check
+        if(!this->logic->legalPosition(representation)){
+            return -value;
+        }
+        // tie
+        return 0;
+    }
+
+    if (depth == 0)
     {
+        // return maxValueCaptures(representation, alpha, beta, 3);
         return this->evaluator->evaluate(representation, optionalMoves);
     }
 
-    savePosition sp;
+    this->evaluator->reorderMoves(representation, optionalMoves);
+
+    unsigned long long int updatedHash;
+
+    posRepresent sp;
+    save(representation, sp);
+
     for (Move move : optionalMoves)
     {
         this->counter++;
-        save(representation, move, sp);
-        update(representation, move);
-        double val = minValue(representation, alpha, beta, depth - 1);
-        restore(representation, sp);
+
+        // Update Zobrist hash
+        updatedHash = zobrist->updateZobristHash(hash, *representation, move);
+        zobrist->recordPosition(updatedHash);
+
+        double val;
+
+        // Check for threefold repetition
+        if (this->zobrist->isThreefoldRepetition(updatedHash))
+        {
+            val = 0;
+        }else if(this->zobrist->transpositionExists(updatedHash)){
+            val = this->zobrist->transpositionEval(updatedHash);
+        }
+        else{
+            update(representation, move);
+            val = minValue(representation, alpha, beta, depth - 1, updatedHash);
+            this->zobrist->saveTranspositionTable(updatedHash, val, depth);
+
+        }
+        restore(representation, sp, move);
+        zobrist->undoPosition(updatedHash);
+
         value = max(val, value);
         if (value >= beta)
         {
-            delete logic;
             return value;
         }
         alpha = max(alpha, value);
     }
 
-    delete logic;
     return value;
 }
 
-double ChessAi::minValue(posRepresent *representation, double alpha, double beta, unsigned int depth)
+double ChessAi::minValue(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash)
 {
     double value = numeric_limits<double>::infinity();
-    Logic *logic = new Logic();
-    vector<Move> optionalMoves = logic->getOptionalMoves(representation);
+    vector<Move> optionalMoves = logic->getOptionalMoves(representation, false);
 
-    if (terminate(optionalMoves, depth))
+    if(optionalMoves.size() == 0){
+        // lost - legalPosition returns false if in check
+        if(!this->logic->legalPosition(representation)){
+            return value;
+        }
+        // tie
+        return 0;
+    }
+
+    if (depth == 0)
     {
+        // return minValueCaptures(representation, alpha, beta, 3);
         return this->evaluator->evaluate(representation, optionalMoves);
     }
-    savePosition sp;
+
+    this->evaluator->reorderMoves(representation, optionalMoves);
+
+    unsigned long long int updatedHash;
+    posRepresent sp;
+    save(representation, sp);
 
     for (Move move : optionalMoves)
     {
-        this->counter++;
-        save(representation, move, sp);
-        update(representation, move);
-        double val = maxValue(representation, alpha, beta, depth - 1);
-        restore(representation, sp);
+        this->counter++;  
+
+        // Update Zobrist hash
+        updatedHash = zobrist->updateZobristHash(hash, *representation, move);
+        zobrist->recordPosition(updatedHash);
+        double val;
+
+         // Check for threefold repetition
+        if (zobrist->isThreefoldRepetition(updatedHash))
+        {
+            val = 0;
+        }else if(this->zobrist->transpositionExists(updatedHash)){
+            val = this->zobrist->transpositionEval(updatedHash);
+        }
+        else{
+            update(representation, move);
+            val = maxValue(representation, alpha, beta, depth - 1, updatedHash);
+            this->zobrist->saveTranspositionTable(updatedHash, val, depth);
+        }
+
+        restore(representation, sp, move);
+        zobrist->undoPosition(updatedHash);
+
         value = min(val, value);
         if (value <= alpha)
         {
-            delete logic;
             return value;
         }
         beta = min(beta, value);
+        
+        
     }
-
-    delete logic;
 
     return value;
 }
+
+// same as minValue but only looking for captures and promotions
+// double ChessAi::minValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth){
+
+//     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, true); // Only get capture moves
+//     double value = this->evaluator->evaluate(representation, optionalMoves);
+
+//     if(value <= alpha){
+//         return value;
+//     }
+
+//     beta = min(beta, value);
+
+//     if(depth == 0 || optionalMoves.size() == 0){
+//         return value;
+//     }
+
+//     // if (optionalMoves.size() == 0)
+//     // {
+//     //     // No captures available, evaluate the position
+//     //     return this->evaluator->evaluate(representation, optionalMoves);
+//     // }
+
+//     this->evaluator->reorderMoves(representation, optionalMoves);
+
+//     savePosition sp;
+//     for (Move move : optionalMoves)
+//     {
+//         this->counter++;
+//         save(representation, move, sp);
+//         update(representation, move);
+//         double val = maxValueCaptures(representation, alpha, beta, depth - 1); // Continue recursively with capture evaluation
+//         restore(representation, sp);
+//         value = min(val, value);
+//         if (value <= alpha)
+//         {
+//             return value;
+//         }
+//         beta = min(beta, value);
+//     }
+
+//     return value;
+// }
+
+// double ChessAi::maxValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth){
+
+//     vector<Move> optionalMoves;
+//     if(depth == 0){
+//         optionalMoves = this->logic->getOptionalMoves(representation, false);
+//     }else{
+//         optionalMoves = this->logic->getOptionalMoves(representation, true); // Only get capture moves
+//     }
+    
+//     double value = this->evaluator->evaluate(representation, optionalMoves);
+
+//     if(value >= beta){
+//         return value;
+//     }
+
+//     alpha = max(alpha, value);
+
+//     if(depth == 0 || optionalMoves.size() == 0){
+//         return value;
+//     }
+
+//     // if (optionalMoves.size() == 0)
+//     // {
+//     //     // No captures available, evaluate the position
+//     //     return this->evaluator->evaluate(representation, optionalMoves);
+//     // }
+
+//     this->evaluator->reorderMoves(representation, optionalMoves);
+
+//     savePosition sp;
+//     for (Move move : optionalMoves)
+//     {
+//         this->counter++;
+//         save(representation, move, sp);
+//         update(representation, move);
+//         double val = minValueCaptures(representation, alpha, beta, depth - 1); // Continue recursively with capture evaluation
+//         restore(representation, sp);
+//         value = max(val, value);
+//         if (value >= beta)
+//         {
+//             return value;
+//         }
+//         alpha = max(alpha, value);
+//     }
+
+//     return value;
+// }
 
 
 std::string ChessAi::moveToString(Move move) {
@@ -399,9 +550,9 @@ string ChessAi::run(string state)
     posRepresent *representation = this->posRep->fenToBoard(state);
     Move bestMove = search(representation).move;
     std::string moveString = moveToString(bestMove);
-    std::cout << this->counter << std::endl;
-    delete representation->board;
-    delete representation->castle;
+    std::cout << "searched:" <<this->counter << std::endl;
+    // delete representation->board;
+    // delete representation->castle;
     delete representation;
 
     return moveString;

@@ -14,10 +14,12 @@
                 "Communicator.cpp", 
                 "lookup.cpp",
                 "evaluator.cpp",
+                "zobristHash.cpp",
                 "-o", 
                 "server.exe",
                 "-std=c++17",
-                "-lws2_32"
+                "-lws2_32",
+                "-w"
             ],
             "group": {
                 "kind": "build",

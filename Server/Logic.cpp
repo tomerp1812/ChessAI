@@ -19,7 +19,7 @@ int Logic::knightMovesToEdge[64][8];
 int Logic::kingMovesToEdge[64][8];
 
 Logic::Logic()
-{ 
+{
     this->promotionPieces[0] = 2; // knight
     this->promotionPieces[1] = 3; // bishop
     this->promotionPieces[2] = 4; // rook
@@ -250,7 +250,6 @@ bool Logic::checkMove(int start, int targetSquare, posRepresent *posRep)
     posRep->friends &= ~(1ULL << start);
     posRep->friends |= (1ULL << targetSquare);
 
-
     // Remove captured enemy
     posRep->enemies &= ~(1ULL << targetSquare);
 
@@ -275,8 +274,10 @@ void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare)
     moves.push_back(move);
 }
 
-void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare, int coefficient){
-    for(int i = 0; i < 4; i++){
+void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare, int coefficient)
+{
+    for (int i = 0; i < 4; i++)
+    {
         Move move;
         move.startPos = start;
         move.targetPos = targetSquare;
@@ -285,7 +286,7 @@ void Logic::addMove(std::vector<Move> &moves, int start, int targetSquare, int c
     }
 }
 
-void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int pawnMoves;
     if (posRep->turn == 'w')
@@ -293,8 +294,8 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
         pawnMoves = WPAttacks[start];
         // checks if en-Passant is possible for the current pawn
         if (posRep->enPassant != -1 && (pawnMoves & (1ULL << posRep->enPassant)))
-        {  
-            //remove enemy pawn
+        {
+            // remove enemy pawn
             int targetPosition = posRep->enPassant - 8;
             int target = -1;
 
@@ -303,10 +304,10 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
             posRep->blockers = (posRep->friends | posRep->enemies);
             if (checkMove(start, posRep->enPassant, posRep))
             {
-                //add en-Passant
+                // add en-Passant
                 addMove(moves, start, posRep->enPassant);
             }
-            //restore enemy pawn
+            // restore enemy pawn
             posRep->enemies |= (1ULL << targetPosition);
             posRep->board[targetPosition] = target;
             posRep->blockers = (posRep->friends | posRep->enemies);
@@ -338,7 +339,7 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
         // checks if en-Passant is possible for the current pawn
         if (posRep->enPassant != -1 && (pawnMoves & (1ULL << posRep->enPassant)))
         {
-            //remove enemy pawn
+            // remove enemy pawn
             int targetPosition = posRep->enPassant + 8;
             int target = 1;
 
@@ -347,10 +348,10 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
             posRep->blockers = (posRep->friends | posRep->enemies);
             if (checkMove(start, posRep->enPassant, posRep))
             {
-                //add en-Passant
+                // add en-Passant
                 addMove(moves, start, posRep->enPassant);
             }
-            //restore enemy pawn
+            // restore enemy pawn
             posRep->enemies |= (1ULL << targetPosition);
             posRep->board[targetPosition] = target;
             posRep->blockers = (posRep->friends | posRep->enemies);
@@ -381,21 +382,27 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
         if (checkMove(start, targetSquare, posRep))
         {
             // white pawn promotion
-            if(posRep->turn == 'w' && targetSquare > 55){
+            if (posRep->turn == 'w' && targetSquare > 55)
+            {
                 addMove(moves, start, targetSquare, 1);
             }
             // black pawn promotion
-            else if(posRep->turn == 'b' && targetSquare < 8){
+            else if (posRep->turn == 'b' && targetSquare < 8)
+            {
                 addMove(moves, start, targetSquare, -1);
-            }else{
-                addMove(moves, start, targetSquare);
             }
-            
+            else
+            {
+                if (!onlyCaptures || posRep->board[targetSquare] != 0)
+                {
+                    addMove(moves, start, targetSquare);
+                }
+            }
         }
     }
 }
 
-void Logic::knightOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::knightOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int knightAttacks = NAttacks[start];
     knightAttacks &= ~posRep->friends;
@@ -405,14 +412,17 @@ void Logic::knightOptionalMoves(std::vector<Move> &moves, int start, posRepresen
 
         knightAttacks &= ~(1ULL << targetSquare);
 
-        if (checkMove(start, targetSquare, posRep))
+        if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            addMove(moves, start, targetSquare);
+            if (checkMove(start, targetSquare, posRep))
+            {
+                addMove(moves, start, targetSquare);
+            }
         }
     }
 }
 
-void Logic::bishopOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::bishopOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int bishopAttacks = attacks.Bishop(posRep->blockers, start);
     bishopAttacks &= ~posRep->friends;
@@ -423,15 +433,17 @@ void Logic::bishopOptionalMoves(std::vector<Move> &moves, int start, posRepresen
 
         // Remove the extracted square from bishopAttacks
         bishopAttacks &= ~(1ULL << targetSquare);
-
-        if (checkMove(start, targetSquare, posRep))
+        if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            addMove(moves, start, targetSquare);
+            if (checkMove(start, targetSquare, posRep))
+            {
+                addMove(moves, start, targetSquare);
+            }
         }
     }
 }
 
-void Logic::rookOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::rookOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int rookAttacks = attacks.Rook(posRep->blockers, start);
     rookAttacks &= ~posRep->friends;
@@ -442,15 +454,17 @@ void Logic::rookOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
 
         // Remove the extracted square from bishopAttacks
         rookAttacks &= ~(1ULL << targetSquare);
-
-        if (checkMove(start, targetSquare, posRep))
+        if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            addMove(moves, start, targetSquare);
+            if (checkMove(start, targetSquare, posRep))
+            {
+                addMove(moves, start, targetSquare);
+            }
         }
     }
 }
 
-void Logic::queenOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::queenOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int queenAttacks = attacks.Queen(posRep->blockers, start);
     queenAttacks &= ~posRep->friends;
@@ -461,14 +475,17 @@ void Logic::queenOptionalMoves(std::vector<Move> &moves, int start, posRepresent
 
         queenAttacks &= ~(1ULL << targetSquare);
 
-        if (checkMove(start, targetSquare, posRep))
+        if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            addMove(moves, start, targetSquare);
+            if (checkMove(start, targetSquare, posRep))
+            {
+                addMove(moves, start, targetSquare);
+            }
         }
     }
 }
 
-void Logic::kingOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep)
+void Logic::kingOptionalMoves(std::vector<Move> &moves, int start, posRepresent *posRep, bool onlyCaptures)
 {
     unsigned long long int kingAttacks = KAttacks[start];
     kingAttacks &= ~posRep->friends;
@@ -479,9 +496,12 @@ void Logic::kingOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
 
         kingAttacks &= ~(1ULL << targetSquare);
         posRep->myKing = targetSquare;
-        if (checkMove(start, targetSquare, posRep))
+        if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            addMove(moves, start, targetSquare);
+            if (checkMove(start, targetSquare, posRep))
+            {
+                addMove(moves, start, targetSquare);
+            }
         }
         posRep->myKing = start;
     }
@@ -489,7 +509,7 @@ void Logic::kingOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
     // Castling
 
     // checks if not in check
-    if (legalPosition(posRep))
+    if (!onlyCaptures && legalPosition(posRep))
     {
         if (posRep->turn == 'w')
         {
@@ -550,7 +570,7 @@ bool Logic::checkCastling(char castle, char checkCastle, posRepresent *posRep, u
     return false;
 }
 
-std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep)
+std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep, bool onlyCaptures)
 {
     std::vector<Move> moves;
     unsigned long long int friends = posRep->friends;
@@ -559,10 +579,7 @@ std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep)
     {
         int start = __builtin_ctzll(friends);
         int piece = posRep->board[start];
-        if(piece == 0){
-            std::cout << "here" << std::endl;
-        }
-        (this->*optionalMovesArr[abs(piece) - 1])(moves, start, posRep);
+        (this->*optionalMovesArr[abs(piece) - 1])(moves, start, posRep, onlyCaptures);
         friends &= ~(1ULL << start);
     }
     return moves;
