@@ -80,6 +80,7 @@ class Game:
     
     def isEnd(self):
         if self.checkEnd():
+            self.notify()
             time.sleep(3)
             if self.checkMate():
                 print("Player Won!")
@@ -125,7 +126,7 @@ class Game:
     # if player has no legal moves it means the game is over                
     def checkEnd(self):
         # save last state
-        numOfRepetitions = 1
+        numOfRepetitions = 0
         if self.currentState in self.states:
             numOfRepetitions = self.states[self.currentState]
         self.states[self.currentState] = numOfRepetitions + 1

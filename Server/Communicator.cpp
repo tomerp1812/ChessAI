@@ -4,9 +4,9 @@
 
 using namespace std;
 
-Communicator::Communicator(int port, ChessAi& ai)
+Communicator::Communicator(int port)
 {
-    this->ai = &ai;
+    this->ai = new ChessAi();
     this->running = true;
     WSADATA wsaData;
     int wsaerr;

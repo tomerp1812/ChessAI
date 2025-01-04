@@ -16,6 +16,7 @@ struct MoveVal
 {
     double value;
     Move move;
+    unsigned int depth;
 };
 
 struct savePosition
@@ -45,17 +46,15 @@ class ChessAi {
         Logic* logic;
         ZobristHash* zobrist;
     public:
-        ChessAi(PosRepresentations& posRep, Evaluator& evaluator);
+        ChessAi();
         ~ChessAi();
         MoveVal search(posRepresent* board);
         std::string run(std::string state);
-        double minValue(posRepresent* representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
-        double maxValue(posRepresent* representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
-        // double minValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
-        // double maxValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth, unsigned long long int hash);
+        MoveVal negaMax(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
+        double quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
         bool terminate(std::vector<Move> optionalMoves, int depth);
         void save(const posRepresent* representation, posRepresent& sp);
-        void update(posRepresent* representation, const Move& move);
+        unsigned long long int update(posRepresent* representation, const Move& move, unsigned long long int hash);
         void restore(posRepresent* representation, const posRepresent& sp, const Move& move);
         std::string moveToString(Move move);
 };

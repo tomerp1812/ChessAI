@@ -13,8 +13,16 @@ extern const double (*white_eg_table[6])[64]; // eg is end game
 extern const double (*black_mg_table[6])[64];
 extern const double (*black_eg_table[6])[64];
 
+extern const double white_mg_passed_pawn_table[64];
+extern const double white_eg_passed_pawn_table[64];
+extern const double black_mg_passed_pawn_table[64];
+extern const double black_eg_passed_pawn_table[64];
 
 extern unsigned long long int zobristTable[12][64]; // 12 pieces (6 each for white/black) x 64 squares
 extern unsigned long long int zobristCastling[4];  // Castling rights
 extern unsigned long long int zobristEnPassant[8]; // En-passant targets (one per file)
 extern unsigned long long int zobristTurn;         // Turn
+
+
+extern unsigned long long int whiteForwardMasks[8];
+extern unsigned long long int blackForwardMasks[8];
