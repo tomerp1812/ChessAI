@@ -10,25 +10,80 @@ class Game:
         self.player1 = player1
         self.player2 = player2 
         self.players = [self.player1, self.player2]
-        self.playerId = 0
         self.pieces = pieces
         self.player1_pieces = pieces[0]
         self.player2_pieces = pieces[1]
-        self.my_king = self.find_king(pieces[0])
-        self.opp_king = self.find_king(pieces[1])
-        self.my_rooks = self.find_rooks(pieces[0])
-        self.opp_rooks = self.find_rooks(pieces[1])
-        self.my_short_rook = self.my_rooks[1]
-        self.my_long_rook = self.my_rooks[0]
-        self.opp_short_rook = self.opp_rooks[1]
-        self.opp_long_rook = self.opp_rooks[0]
-        self.kings = [self.my_king, self.opp_king]
+        if fen.turn == 'w':
+            self.playerId = 0
+            self.my_king = self.find_king(pieces[0])
+            self.opp_king = self.find_king(pieces[1])
+            self.my_rooks = self.find_rooks(pieces[0])
+            self.opp_rooks = self.find_rooks(pieces[1])
+            self.currentPiecesDictionary = self.setDict(pieces[0])
+            self.opponentPiecesDictionary = self.setDict(pieces[1])
+            self.currentPlayer = player1
+            self.kings = [self.my_king, self.opp_king]
+            self.players_dictionaries = [self.currentPiecesDictionary, self.opponentPiecesDictionary]
+        elif fen.turn == 'b':
+            self.playerId = 1
+            self.my_king = self.find_king(pieces[1])
+            self.opp_king = self.find_king(pieces[0])
+            self.my_rooks = self.find_rooks(pieces[1])
+            self.opp_rooks = self.find_rooks(pieces[0])
+            self.currentPiecesDictionary = self.setDict(pieces[1])
+            self.opponentPiecesDictionary = self.setDict(pieces[0])
+            self.currentPlayer = player2
+            self.kings = [self.opp_king, self.my_king]
+            self.players_dictionaries = [self.opponentPiecesDictionary, self.currentPiecesDictionary]
+        else:
+            print("error in playerId")
+        
+        self.my_long_rook = None
+        self.my_short_rook = None
+        self.opp_long_rook = None
+        self.opp_short_rook = None
+        if len(self.my_rooks) == 2:
+            self.my_short_rook = self.my_rooks[1]
+            self.my_long_rook = self.my_rooks[0]
+        elif len(self.my_rooks) == 1:
+            rookPos = self.my_rooks[0].getPosition()
+            if fen.turn == 'w':
+                # long castle white rook
+                if rookPos == (0, 7):
+                    self.my_long_rook = self.my_rooks[0]
+                # short castle white rook
+                elif rookPos == (7, 7):
+                    self.my_short_rook = self.my_rooks[0]
+            else:
+                # long castle black rook
+                if rookPos == (0, 0):
+                    self.my_long_rook = self.my_rooks[0]
+                # short castle black rook
+                elif rookPos == (7, 0):
+                    self.my_short_rook = self.my_rooks[0]
+        if len(self.opp_rooks) == 2:
+            self.opp_short_rook = self.opp_rooks[1]
+            self.opp_long_rook = self.opp_rooks[0]
+        elif len(self.opp_rooks) == 1:    
+            rookPos = self.opp_rooks[0].getPosition()
+            if fen.turn == 'w':
+                # long castle white rook
+                if rookPos == (0, 7):
+                    self.opp_long_rook = self.opp_rooks[0]
+                # short castle white rook
+                elif rookPos == (7, 7):
+                    self.opp_short_rook = self.opp_rooks[0]
+            else:
+                # long castle black rook
+                if rookPos == (0, 0):
+                    self.opp_long_rook = self.opp_rooks[0]
+                # short castle black rook
+                elif rookPos == (7, 0):
+                    self.opp_short_rook = self.opp_rooks[0]
+                    
+        
         self.painter = painter
         self.running = True
-        self.currentPiecesDictionary = self.setDict(pieces[0])
-        self.opponentPiecesDictionary = self.setDict(pieces[1])
-        self.players_dictionaries = [self.currentPiecesDictionary, self.opponentPiecesDictionary]
-        self.currentPlayer = player1
         self.piece = None
         self.optional_moves = None
         self.last_move = None

@@ -28,7 +28,7 @@ public:
     void recordPosition(unsigned long long hash);
     bool isThreefoldRepetition(unsigned long long hash);
     void undoPosition(unsigned long long hash);
-    void saveTranspositionTable(unsigned long long int hash, double evaluation, unsigned int depth);
+    void saveTranspositionTable(unsigned long long int hash, double evaluation, unsigned int depth, unsigned int mateIn);
     unsigned int transpositionDepth(unsigned long long int hash);
     bool transpositionExists(unsigned long long int hash);
     MoveVal transpositionEval(unsigned long long int hash);

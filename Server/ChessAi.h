@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 #include <unordered_map>
 #include "Logic.h"
 
@@ -14,9 +15,10 @@ struct Move;
 
 struct MoveVal
 {
-    double value;
     Move move;
+    double value;
     unsigned int depth;
+    unsigned int mateIn = 0;
 };
 
 struct savePosition
@@ -40,6 +42,12 @@ struct savePosition
 class ChessAi {
     private:
         int counter;
+        unsigned long long int newPositionHash;
+        unsigned int startingDepth;
+        unsigned int totalDepth;
+        unsigned int halfDepth;
+        const unsigned int timeLimit = 2000;
+        std::chrono::steady_clock::time_point startTime;
         std::unordered_map<unsigned long long int, double> transpositionTable;
         PosRepresentations* posRep;
         Evaluator* evaluator;
@@ -48,10 +56,11 @@ class ChessAi {
     public:
         ChessAi();
         ~ChessAi();
-        MoveVal search(posRepresent* board);
+        MoveVal iddfs(posRepresent* representation);
+        MoveVal search(posRepresent* representation, const std::vector<Move>& optionalMoves, unsigned long long int hash);
         std::string run(std::string state);
         MoveVal negaMax(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
-        double quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
+        MoveVal quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
         bool terminate(std::vector<Move> optionalMoves, int depth);
         void save(const posRepresent* representation, posRepresent& sp);
         unsigned long long int update(posRepresent* representation, const Move& move, unsigned long long int hash);

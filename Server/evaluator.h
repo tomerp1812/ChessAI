@@ -46,9 +46,8 @@ class Evaluator{
         double rookEval(int position, unsigned long long int friends, unsigned long long int enemies);
         double queenEval(int position, unsigned long long int friends, unsigned long long int enemies);
         double kingEval(int position, unsigned long long int friends, unsigned long long int enemies);
-        double evaluate(const posRepresent* representation, const std::vector<Move>& optionalMoves);
+        double evaluate(const posRepresent* representation);
         void reorderMoves(posRepresent *representation, std::vector<Move>& optionalMoves);
-        // bool static compareByGuessValue(const Move &a, const Move &b);
 };
 
 

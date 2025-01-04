@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <chrono>
 #include "Logic.h"
 #include "lookup.h"
 #include "PosRepresentations.h"
@@ -19,6 +18,8 @@ ChessAi::ChessAi()
     this->evaluator = new Evaluator();
     this->logic = new Logic();
     this->zobrist = new ZobristHash();
+    this->totalDepth = 8;
+    this->halfDepth = this->totalDepth / 2;
 }
 
 ChessAi::~ChessAi()
@@ -308,45 +309,86 @@ void ChessAi::restore(posRepresent* representation,const posRepresent& sp, const
 }
 
 
-MoveVal ChessAi::search(posRepresent *representation){
-    int depth = 5;
-    double alpha = -numeric_limits<double>::infinity();
-    double beta = numeric_limits<double>::infinity();
+MoveVal ChessAi::iddfs(posRepresent *representation)
+{
+    this->startTime = chrono::steady_clock::now();
 
+    // initializations
+    this->newPositionHash = 0;
     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, false);
     this->evaluator->reorderMoves(representation, optionalMoves);
-
     // Initialize Zobrist hash
     unsigned long long int hash = zobrist->computeZobristHash(*representation);
     // Track initial position
     zobrist->recordPosition(hash);
+    this->startingDepth = 8;
+    this->totalDepth = 8;
+    this->halfDepth = this->totalDepth / 2;
+
+    MoveVal bestMove;
+    MoveVal currentMove;
+
+    for(;this->totalDepth < 200;){
+        currentMove = search(representation, optionalMoves, hash);
+        auto currentTime = chrono::steady_clock::now();
+        auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - this->startTime).count();
+        if(this->totalDepth == this->startingDepth || elapsedTime < timeLimit){
+            bestMove = currentMove;
+        }else{
+            break;
+        }
+        this->totalDepth++;
+        this->halfDepth = this->totalDepth / 2;
+    }
+    
+    // need to record the move!
+    zobrist->recordPosition(this->newPositionHash); 
+
+    // recording corrent position
+    this->zobrist->saveTranspositionTable(hash, bestMove.value, this->totalDepth, bestMove.mateIn);
+
+    // data printers
+    std::cout << "depth: " << this->totalDepth << std::endl;
+    cout << "move evaluation: " << bestMove.value << endl;
+    cout << "evaluator evaluation: " << this->evaluator->evaluate(representation) << endl;
+    return bestMove;
+}
+
+MoveVal ChessAi::search(posRepresent *representation, const std::vector<Move>& optionalMoves, unsigned long long int hash){
+    double alpha = -numeric_limits<double>::infinity();
+    double beta = numeric_limits<double>::infinity();
     unsigned long long int updatedHash;
-    unsigned long long int newPositionHash;
 
     MoveVal moveVal;
     MoveVal ret;
     moveVal.value = -1 * numeric_limits<double>::infinity();
-    moveVal.depth = depth;
+    moveVal.depth = this->totalDepth;
 
     posRepresent sp;
     save(representation, sp);
 
     for (Move move : optionalMoves){
+        // check if time passed and this is not the first itteration
+        auto currentTime = chrono::steady_clock::now();
+        auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - this->startTime).count();
+        if(this->startingDepth < this->totalDepth && elapsedTime > timeLimit){
+            return moveVal;
+        }
+
         // Update Zobrist hash for the new position
         updatedHash = update(representation, move, hash);
         zobrist->recordPosition(updatedHash);
 
-        // double val;
         // Check for threefold repetition
         if (zobrist->isThreefoldRepetition(updatedHash) || representation->halfMove >= 100){
             ret.value = 0;
-            ret.depth = depth;
-        }else if(this->zobrist->transpositionExists(updatedHash) && this->zobrist->transpositionDepth(updatedHash) >= depth){
+            ret.depth = this->totalDepth;
+        }else if(this->zobrist->transpositionExists(updatedHash) && this->zobrist->transpositionDepth(updatedHash) >= this->totalDepth){
             ret = this->zobrist->transpositionEval(updatedHash);
         }else{
-            ret = negaMax(representation, depth - 1, alpha, beta, updatedHash);
+            ret = negaMax(representation, this->totalDepth - 1, alpha, beta, updatedHash);
             ret.value = -ret.value;
-            this->zobrist->saveTranspositionTable(updatedHash, ret.value, depth);
+            this->zobrist->saveTranspositionTable(updatedHash, ret.value, this->totalDepth, ret.mateIn);
         }
         restore(representation, sp, move);
 
@@ -357,22 +399,16 @@ MoveVal ChessAi::search(posRepresent *representation){
         // if the value is -inf means losing means i want to choose the move that has slowest mate
         if (ret.value > moveVal.value || 
             (ret.value == moveVal.value && 
-                ((ret.value == numeric_limits<double>::infinity() && ret.depth > moveVal.depth) || 
-                    (ret.value == -numeric_limits<double>::infinity() && ret.depth < moveVal.depth)))) {
+                ((ret.value == numeric_limits<double>::infinity() && ret.mateIn < moveVal.mateIn) || 
+                    (ret.value == -numeric_limits<double>::infinity() && ret.mateIn > moveVal.mateIn)))) {
                         moveVal.value = ret.value;
                         moveVal.move = move;
                         moveVal.depth = ret.depth;
-                        newPositionHash = updatedHash;
+                        moveVal.mateIn = ret.mateIn;
+                        this->newPositionHash = updatedHash;
         }
 
     }
-    // need to record the move!
-    zobrist->recordPosition(newPositionHash); 
-
-    // recording corrent position
-    this->zobrist->saveTranspositionTable(hash, moveVal.value, depth);
-    cout << "move evaluation: " << moveVal.value << endl;
-    cout << "evaluator evaluation: " << this->evaluator->evaluate(&sp, optionalMoves) << endl;
     return moveVal;
 }
 
@@ -380,8 +416,6 @@ MoveVal ChessAi::search(posRepresent *representation){
 
 MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash){
     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, false);
-    // double value = -1 * numeric_limits<double>::infinity();
-
     MoveVal moveval;
     MoveVal ret;
     moveval.value = -1 * numeric_limits<double>::infinity();
@@ -389,15 +423,15 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, doubl
 
     if(optionalMoves.size() == 0){
         if(!this->logic->legalPosition(representation)){
+            moveval.mateIn = this->totalDepth - depth;
             return moveval;
         }
         moveval.value = 0;
         return moveval;
     }
 
-    if (depth == 0){
-        moveval.value = this->evaluator->evaluate(representation, optionalMoves);
-        return moveval;
+    if (depth == this->halfDepth){
+        return quiescence(representation, this->halfDepth, alpha, beta, hash);
     }
 
     this->evaluator->reorderMoves(representation, optionalMoves);
@@ -408,7 +442,6 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, doubl
     unsigned long long int updatedHash;
 
     for(Move move: optionalMoves){        
-        // double val;
         updatedHash = update(representation, move, hash);
         zobrist->recordPosition(updatedHash);
         if (this->zobrist->isThreefoldRepetition(updatedHash) || representation->halfMove >= 100){
@@ -420,9 +453,69 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, doubl
         }else{   
             ret = negaMax(representation, depth - 1, -beta, -alpha, updatedHash);
             ret.value = -ret.value;
-            this->zobrist->saveTranspositionTable(updatedHash, ret.value, depth);
+            this->zobrist->saveTranspositionTable(updatedHash, ret.value, depth, ret.mateIn);
             
         }
+        restore(representation, sp, move);
+        zobrist->undoPosition(updatedHash);
+
+
+        if (ret.value > moveval.value || 
+                (ret.value == moveval.value && 
+                     ((ret.value == numeric_limits<double>::infinity() && ret.mateIn < moveval.mateIn) || 
+                    (ret.value == -numeric_limits<double>::infinity() && ret.mateIn > moveval.mateIn)))) {
+                        moveval.value = ret.value;
+                        moveval.depth = ret.depth;
+                        moveval.mateIn = ret.mateIn;
+        }
+
+        alpha = max(alpha, moveval.value);
+
+        if(alpha >= beta){
+            break;
+        }
+    }
+    return moveval;
+}
+
+MoveVal ChessAi::quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash)
+{
+    MoveVal moveval;
+    MoveVal ret;
+    moveval.value = this->evaluator->evaluate(representation);
+    moveval.depth = depth;
+
+    if(moveval.value >= beta){
+        moveval.value = beta;
+        return moveval;
+    }
+
+    if(depth == 0){
+        return moveval;
+    }
+
+    alpha = max(alpha, moveval.value);
+
+    // only captures
+    vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, true);
+    this->evaluator->reorderMoves(representation, optionalMoves);
+
+    unsigned long long int updatedHash;
+    posRepresent sp;
+    save(representation, sp);
+
+    for(Move move: optionalMoves){
+        updatedHash = update(representation, move, hash);
+        zobrist->recordPosition(updatedHash);
+
+        if(this->zobrist->transpositionExists(updatedHash) && this->zobrist->transpositionDepth(updatedHash) >= depth){
+            ret = this->zobrist->transpositionEval(updatedHash);
+        }else{
+            ret = quiescence(representation, depth - 1, -beta, -alpha, updatedHash);
+            ret.value = -ret.value;
+            this->zobrist->saveTranspositionTable(updatedHash, ret.value, depth, ret.mateIn);
+        }
+
         restore(representation, sp, move);
         zobrist->undoPosition(updatedHash);
 
@@ -435,113 +528,14 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, doubl
                         moveval.depth = ret.depth;
         }
 
-        // value = max(value, ret.value);
         alpha = max(alpha, moveval.value);
 
         if(alpha >= beta){
             break;
         }
     }
-    // moveval.value = value;
     return moveval;
 }
-
-double ChessAi::quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash)
-{
-    return 0.0;
-}
-
-// same as minValue but only looking for captures and promotions
-// double ChessAi::minValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth){
-
-//     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, true); // Only get capture moves
-//     double value = this->evaluator->evaluate(representation, optionalMoves);
-
-//     if(value <= alpha){
-//         return value;
-//     }
-
-//     beta = min(beta, value);
-
-//     if(depth == 0 || optionalMoves.size() == 0){
-//         return value;
-//     }
-
-//     // if (optionalMoves.size() == 0)
-//     // {
-//     //     // No captures available, evaluate the position
-//     //     return this->evaluator->evaluate(representation, optionalMoves);
-//     // }
-
-//     this->evaluator->reorderMoves(representation, optionalMoves);
-
-//     savePosition sp;
-//     for (Move move : optionalMoves)
-//     {
-//         this->counter++;
-//         save(representation, move, sp);
-//         update(representation, move);
-//         double val = maxValueCaptures(representation, alpha, beta, depth - 1); // Continue recursively with capture evaluation
-//         restore(representation, sp);
-//         value = min(val, value);
-//         if (value <= alpha)
-//         {
-//             return value;
-//         }
-//         beta = min(beta, value);
-//     }
-
-//     return value;
-// }
-
-// double ChessAi::maxValueCaptures(posRepresent *representation, double alpha, double beta, unsigned int depth){
-
-//     vector<Move> optionalMoves;
-//     if(depth == 0){
-//         optionalMoves = this->logic->getOptionalMoves(representation, false);
-//     }else{
-//         optionalMoves = this->logic->getOptionalMoves(representation, true); // Only get capture moves
-//     }
-    
-//     double value = this->evaluator->evaluate(representation, optionalMoves);
-
-//     if(value >= beta){
-//         return value;
-//     }
-
-//     alpha = max(alpha, value);
-
-//     if(depth == 0 || optionalMoves.size() == 0){
-//         return value;
-//     }
-
-//     // if (optionalMoves.size() == 0)
-//     // {
-//     //     // No captures available, evaluate the position
-//     //     return this->evaluator->evaluate(representation, optionalMoves);
-//     // }
-
-//     this->evaluator->reorderMoves(representation, optionalMoves);
-
-//     savePosition sp;
-//     for (Move move : optionalMoves)
-//     {
-//         this->counter++;
-//         save(representation, move, sp);
-//         update(representation, move);
-//         double val = minValueCaptures(representation, alpha, beta, depth - 1); // Continue recursively with capture evaluation
-//         restore(representation, sp);
-//         value = max(val, value);
-//         if (value >= beta)
-//         {
-//             return value;
-//         }
-//         alpha = max(alpha, value);
-//     }
-
-//     return value;
-// }
-
 
 std::string ChessAi::moveToString(Move move) {
     auto toAlgebraic = [](int pos) {
@@ -574,12 +568,8 @@ std::string ChessAi::moveToString(Move move) {
 string ChessAi::run(string state)
 {
     posRepresent *representation = this->posRep->fenToBoard(state);
-    Move bestMove = search(representation).move;
+    Move bestMove = iddfs(representation).move;
     std::string moveString = moveToString(bestMove);
-    // std::cout << "searched:" <<this->counter << std::endl;
-    // delete representation->board;
-    // delete representation->castle;
     delete representation;
-
     return moveString;
 }

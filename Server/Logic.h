@@ -6,10 +6,10 @@
 
 struct Move
 {
+    double guessedValue = 0.0; // for reordering moves
     int startPos;
     int targetPos;
     int promotedPiece = 0;
-    double guessedValue = 0.0; // for reordering moves
 };
 
 class Logic

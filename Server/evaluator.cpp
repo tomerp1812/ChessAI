@@ -242,7 +242,7 @@ double Evaluator::kingEval(int position, unsigned long long int friends, unsigne
     return (-15 * piecesAttackingTheKing);
 }
 
-double Evaluator::evaluate(const posRepresent *representation, const std::vector<Move>& optionalMoves){
+double Evaluator::evaluate(const posRepresent *representation){
 
     // init bitboards
     for(int i = 0; i < 6; i++){
