@@ -1,13 +1,17 @@
 # Chess AI
 
 ## Overview
-This is a fully functional Chess game built with Pygame, offering both Human vs AI and Human vs Human gameplay. The game includes all the necessary rules and logic for chess, including advanced moves like **en passant**, **castling**, **threefold repetition**, and the **50-move rule**. Additionally, the game highlights possible moves when a player selects a piece, making it user-friendly for beginners.
+This project features a fully functional Chess game built with Pygame, offering both Human vs AI and Human vs Human gameplay modes. The AI is implemented in C++ and utilizes advanced techniques to make highly strategic decisions, enabling it to challenge even experienced players. The AI incorporates methods such as negamax with alpha-beta pruning, iterative deepening depth-first search (IDDFS), transposition tables, and a deeper search focused on captures. The game also adheres to all standard chess rules and offers user-friendly features like highlighting possible moves when selecting a piece.
 
 ## Features
+- **Ai Features**:
+    - **Strategic AI**: The AI uses the minimax algorithm with alpha-beta pruning, enabling it to play at a high level of skill.
+    - **Iterative Deepening DFS**: The AI improves its decision-making by progressively exploring deeper moves.
+    - **Transposition Tables**: It avoids redundant calculations for previously encountered positions, enhancing efficiency.
+    - **Capture-Focused Search**: The AI prioritizes searches around captures, improving its performance in critical game situations.
+    - **High Difficulty**: With these techniques, the AI is capable of defeating the average chess player.
+
 - **Human vs AI** or **Human vs Human** gameplay
-- Two AI options:
-  - **Random AI**: Makes completely random moves.
-  - **SimpleAI**: Uses the **minimax algorithm with alpha-beta pruning** to make strategic moves.
 - Full support for all chess rules, including:
   - Normal chess moves: piece movement, captures, check, and checkmate.
   - Special rules: **en passant**, **castling**, **promotion**, **threefold repetition**, and **50-move rule**.
@@ -36,12 +40,11 @@ This is a fully functional Chess game built with Pygame, offering both Human vs 
 
 ## How to Play
 1. Menu: After starting the game, you'll be presented with a menu where you can choose your opponent:
-  * Random AI: Plays random moves.
-  * Simple AI: Uses a more advanced strategy based on the minimax algorithm with alpha-beta pruning.
-  * Human: Play against another human.
-3. Game Controls:
-  * Human players: Click on a piece to see its valid moves. Click again to move the piece to the desired square.
-  * The game automatically handles check, checkmate, and draw conditions (threefold repetition, 50-move rule, stalemate).
+    * AI.
+    * Human: Play against another human.
+2. Game Controls:
+    * Human players: Click on a piece to see its valid moves. Click again to move the piece to the desired square.
+    * The game automatically handles check, checkmate, and draw conditions (threefold repetition, 50-move rule, stalemate).
 
 ## Contributors
 https://github.com/tomerp1812
