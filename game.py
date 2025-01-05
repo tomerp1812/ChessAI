@@ -7,6 +7,7 @@ import time
 
 class Game:
     def __init__(self, player1, player2, pieces, painter, fen):
+        self.fen = fen
         self.player1 = player1
         self.player2 = player2 
         self.players = [self.player1, self.player2]
@@ -24,6 +25,10 @@ class Game:
             self.currentPlayer = player1
             self.kings = [self.my_king, self.opp_king]
             self.players_dictionaries = [self.currentPiecesDictionary, self.opponentPiecesDictionary]
+            if "K" not in self.fen.castling and "Q" not in self.fen.castling:
+                self.my_king.king_first_move = False
+            if "k" not in self.fen.castling and "q" not in self.fen.castling:
+                self.opp_king.king_first_move = False
         elif fen.turn == 'b':
             self.playerId = 1
             self.my_king = self.find_king(pieces[1])
@@ -35,6 +40,10 @@ class Game:
             self.currentPlayer = player2
             self.kings = [self.opp_king, self.my_king]
             self.players_dictionaries = [self.opponentPiecesDictionary, self.currentPiecesDictionary]
+            if "K" not in self.fen.castling and "Q" not in self.fen.castling:
+                self.opp_king.king_first_move = False
+            if "k" not in self.fen.castling and "q" not in self.fen.castling:
+                self.my_king.king_first_move = False        
         else:
             print("error in playerId")
         
@@ -90,7 +99,7 @@ class Game:
         self.states = {}
         self.fiftyRuleMove = 0
         self.currentState = self.state()
-        self.fen = fen
+        
        
     def find_king(self, pieces):
         for piece in pieces:

@@ -125,6 +125,7 @@ MoveVal ZobristHash::transpositionEval(unsigned long long int hash)
         return it->second;
     }
     // shouldn't get here
+    std::cout << "problem in transpositionEval!" << std::endl;
     MoveVal mv;
     mv.value = -std::numeric_limits<double>::infinity();
     mv.depth = 0;

@@ -17,6 +17,7 @@ struct MoveVal
 {
     Move move;
     double value;
+    unsigned long long int positionHash;
     unsigned int depth;
     unsigned int mateIn = 0;
 };

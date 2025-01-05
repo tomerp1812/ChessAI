@@ -18,8 +18,8 @@ ChessAi::ChessAi()
     this->evaluator = new Evaluator();
     this->logic = new Logic();
     this->zobrist = new ZobristHash();
-    this->totalDepth = 8;
-    this->halfDepth = this->totalDepth / 2;
+    // this->totalDepth = 8;
+    // this->halfDepth = this->totalDepth / 2;
 }
 
 ChessAi::~ChessAi()
@@ -330,6 +330,12 @@ MoveVal ChessAi::iddfs(posRepresent *representation)
 
     for(;this->totalDepth < 200;){
         currentMove = search(representation, optionalMoves, hash);
+        // found a mate no reason to keep searching
+        if(currentMove.value == numeric_limits<double>::infinity() ||
+        currentMove.value == -numeric_limits<double>::infinity()){
+            bestMove = currentMove;
+            break;
+        }
         auto currentTime = chrono::steady_clock::now();
         auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - this->startTime).count();
         if(this->totalDepth == this->startingDepth || elapsedTime < timeLimit){
@@ -342,15 +348,15 @@ MoveVal ChessAi::iddfs(posRepresent *representation)
     }
     
     // need to record the move!
-    zobrist->recordPosition(this->newPositionHash); 
+    zobrist->recordPosition(bestMove.positionHash); 
 
     // recording corrent position
     this->zobrist->saveTranspositionTable(hash, bestMove.value, this->totalDepth, bestMove.mateIn);
 
     // data printers
-    std::cout << "depth: " << this->totalDepth << std::endl;
+    cout << "depth: " << this->totalDepth << std::endl;
+    cout << "mate in: " << bestMove.mateIn << std::endl;
     cout << "move evaluation: " << bestMove.value << endl;
-    cout << "evaluator evaluation: " << this->evaluator->evaluate(representation) << endl;
     return bestMove;
 }
 
@@ -397,17 +403,25 @@ MoveVal ChessAi::search(posRepresent *representation, const std::vector<Move>& o
         // i want to find a better move, if i found two moves that has the same value, 
         // if the value is inf means winning means i want to choose the move that has faster mate
         // if the value is -inf means losing means i want to choose the move that has slowest mate
-        if (ret.value > moveVal.value || 
-            (ret.value == moveVal.value && 
-                ((ret.value == numeric_limits<double>::infinity() && ret.mateIn < moveVal.mateIn) || 
-                    (ret.value == -numeric_limits<double>::infinity() && ret.mateIn > moveVal.mateIn)))) {
-                        moveVal.value = ret.value;
-                        moveVal.move = move;
-                        moveVal.depth = ret.depth;
-                        moveVal.mateIn = ret.mateIn;
-                        this->newPositionHash = updatedHash;
+        if (ret.value == moveVal.value) {
+            // if found mate
+            if((ret.value == numeric_limits<double>::infinity() && moveVal.mateIn > ret.mateIn)
+            || (ret.value == -numeric_limits<double>::infinity() && moveVal.mateIn <= ret.mateIn)){
+                moveVal.mateIn = ret.mateIn + 1;
+                moveVal.value = ret.value;
+                moveVal.move = move;
+                moveVal.depth = ret.depth;
+                moveVal.positionHash = updatedHash;
+            }
+        }else if(ret.value > moveVal.value){
+            if(ret.value == numeric_limits<double>::infinity() || ret.value == -numeric_limits<double>::infinity()){
+                moveVal.mateIn = ret.mateIn + 1;
+            }
+            moveVal.value = ret.value;
+            moveVal.depth = ret.depth;
+            moveVal.move = move;
+            moveVal.positionHash = updatedHash;
         }
-
     }
     return moveVal;
 }
@@ -416,18 +430,18 @@ MoveVal ChessAi::search(posRepresent *representation, const std::vector<Move>& o
 
 MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash){
     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, false);
-    MoveVal moveval;
+    MoveVal moveVal;
     MoveVal ret;
-    moveval.value = -1 * numeric_limits<double>::infinity();
-    moveval.depth = depth;
+    moveVal.value = -1 * numeric_limits<double>::infinity();
+    moveVal.depth = depth;
 
     if(optionalMoves.size() == 0){
         if(!this->logic->legalPosition(representation)){
-            moveval.mateIn = this->totalDepth - depth;
-            return moveval;
+            moveVal.mateIn = 0;
+            return moveVal;
         }
-        moveval.value = 0;
-        return moveval;
+        moveVal.value = 0;
+        return moveVal;
     }
 
     if (depth == this->halfDepth){
@@ -460,22 +474,31 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, doubl
         zobrist->undoPosition(updatedHash);
 
 
-        if (ret.value > moveval.value || 
-                (ret.value == moveval.value && 
-                     ((ret.value == numeric_limits<double>::infinity() && ret.mateIn < moveval.mateIn) || 
-                    (ret.value == -numeric_limits<double>::infinity() && ret.mateIn > moveval.mateIn)))) {
-                        moveval.value = ret.value;
-                        moveval.depth = ret.depth;
-                        moveval.mateIn = ret.mateIn;
+        
+
+        if (ret.value == moveVal.value) {
+            // if found mate
+            if((ret.value == numeric_limits<double>::infinity() && moveVal.mateIn > ret.mateIn)
+            || (ret.value == -numeric_limits<double>::infinity() && moveVal.mateIn <= ret.mateIn)){
+                moveVal.mateIn = ret.mateIn + 1;
+                moveVal.value = ret.value;
+                moveVal.depth = ret.depth;
+            }
+        }else if(ret.value > moveVal.value){
+            if(ret.value == numeric_limits<double>::infinity() || ret.value == -numeric_limits<double>::infinity()){
+                moveVal.mateIn = ret.mateIn + 1;
+            }
+            moveVal.value = ret.value;
+            moveVal.depth = ret.depth;
         }
 
-        alpha = max(alpha, moveval.value);
+        alpha = max(alpha, moveVal.value);
 
         if(alpha >= beta){
             break;
         }
     }
-    return moveval;
+    return moveVal;
 }
 
 MoveVal ChessAi::quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash)
@@ -520,12 +543,9 @@ MoveVal ChessAi::quiescence(posRepresent *representation, unsigned int depth, do
         zobrist->undoPosition(updatedHash);
 
 
-        if (ret.value > moveval.value || 
-                (ret.value == moveval.value && 
-                     ((ret.value == numeric_limits<double>::infinity() && ret.depth > moveval.depth) || 
-                    (ret.value == -numeric_limits<double>::infinity() && ret.depth < moveval.depth)))) {
-                        moveval.value = ret.value;
-                        moveval.depth = ret.depth;
+        if (ret.value >= moveval.value){
+            moveval.value = ret.value;
+            moveval.depth = ret.depth;
         }
 
         alpha = max(alpha, moveval.value);

@@ -12,7 +12,7 @@ def main():
     width = 800
     height = 800
     num_of_squares = 64
-    fen = Fen("8/8/4Q3/6K1/4k3/8/8/8 b - - 22 112")
+    fen = Fen("4R3/4R3/4K3/8/4k3/8/8/8 b - - 22 112")
     controller = Controller(width, height)
     pieces = create_pieces(controller, fen)
     painter = Painter(pieces, controller, num_of_squares)
