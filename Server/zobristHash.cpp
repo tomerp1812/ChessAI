@@ -97,7 +97,7 @@ void ZobristHash::undoPosition(unsigned long long hash)
     }
 }
 
-void ZobristHash::saveTranspositionTable(unsigned long long int hash, double evaluation, unsigned int depth, unsigned int mateIn)
+void ZobristHash::saveTranspositionTable(unsigned long long int hash, double evaluation, unsigned int depth, int mateIn)
 {
     MoveVal mv;
     mv.value = evaluation;
@@ -127,7 +127,7 @@ MoveVal ZobristHash::transpositionEval(unsigned long long int hash)
     // shouldn't get here
     std::cout << "problem in transpositionEval!" << std::endl;
     MoveVal mv;
-    mv.value = -std::numeric_limits<double>::infinity();
+    mv.value = negInf;
     mv.depth = 0;
     return mv;
 }

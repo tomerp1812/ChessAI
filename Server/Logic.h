@@ -7,8 +7,8 @@
 struct Move
 {
     double guessedValue = 0.0; // for reordering moves
-    int startPos;
-    int targetPos;
+    int startPos = -1;
+    int targetPos = -1;
     int promotedPiece = 0;
 };
 

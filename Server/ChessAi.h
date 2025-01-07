@@ -6,6 +6,7 @@
 #include <chrono>
 #include <unordered_map>
 #include "Logic.h"
+#include "lookup.h"
 
 class PosRepresentations;
 class Evaluator;
@@ -19,7 +20,12 @@ struct MoveVal
     double value;
     unsigned long long int positionHash;
     unsigned int depth;
-    unsigned int mateIn = 0;
+    int mateIn = -1;
+};
+
+struct AlphaBeta {
+    double value = negInf;
+    int mateIn = -1;
 };
 
 struct savePosition
@@ -60,8 +66,8 @@ class ChessAi {
         MoveVal iddfs(posRepresent* representation);
         MoveVal search(posRepresent* representation, const std::vector<Move>& optionalMoves, unsigned long long int hash);
         std::string run(std::string state);
-        MoveVal negaMax(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
-        MoveVal quiescence(posRepresent *representation, unsigned int depth, double alpha, double beta, unsigned long long int hash);
+        MoveVal negaMax(posRepresent *representation, unsigned int depth, AlphaBeta alpha, AlphaBeta beta, unsigned long long int hash);
+        MoveVal quiescence(posRepresent *representation, unsigned int depth, AlphaBeta alpha, AlphaBeta beta, unsigned long long int hash);
         bool terminate(std::vector<Move> optionalMoves, int depth);
         void save(const posRepresent* representation, posRepresent& sp);
         unsigned long long int update(posRepresent* representation, const Move& move, unsigned long long int hash);

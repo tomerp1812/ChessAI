@@ -198,7 +198,7 @@ class Game:
         if numOfRepetitions == 3:
             return True
         
-        if self.fiftyRuleMove == 50:
+        if self.fiftyRuleMove == 100:
             return True
         
         for position, piece in list(self.currentPiecesDictionary.items()):

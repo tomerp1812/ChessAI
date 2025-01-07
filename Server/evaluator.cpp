@@ -1,5 +1,4 @@
 #include "evaluator.h"
-#include <limits>
 #include <iostream>
 #include <algorithm>
 #include <climits> 
@@ -137,8 +136,8 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
 
         // double pawns
         if(fileMask & savedFriendlyPawns & ~(1ULL << position)){
-            mgPVal -= 10;
-            egPVal -= 30;
+            mgPVal -= 6;
+            egPVal -= 12;
         }
         
         // friendly pawns that are in left or right files from the current pawn
@@ -146,8 +145,8 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
 
         // isolated pawns
         if(!neighbors){
-            mgPVal -= 10;
-            egPVal -= 30;
+            mgPVal -= 3;
+            egPVal -= 5;
         }
         // backward pawns, pawn that all his neighbors are ahead of him
         else if(!((forwardMask[rankIndex] ^ maxValue) & neighbors)){
@@ -158,12 +157,12 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
         else if(coefficient == 1){
             if(rankIndex > 1){
                 if(fileIndex < 7 && ((1ULL << (position - pawnProtector1)) & savedFriendlyPawns)){
-                    mgPVal += 5;
-                    egPVal += 5;
+                    mgPVal += 3;
+                    egPVal += 6;
                 }
                 if(fileIndex > 0 && ((1ULL << (position - pawnProtector2)) & savedFriendlyPawns)){
-                    mgPVal += 5;
-                    egPVal += 5;
+                    mgPVal += 3;
+                    egPVal += 6;
                 }
             }
         }
@@ -171,12 +170,12 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
         else{
             if(rankIndex < 7){
                 if(fileIndex > 0 && ((1ULL << (position - pawnProtector1)) & savedFriendlyPawns)){
-                    mgPVal += 5;
-                    egPVal += 5;
+                    mgPVal += 3;
+                    egPVal += 6;
                 }
                 if(fileIndex < 7 && ((1ULL << (position - pawnProtector2)) & savedFriendlyPawns)){
-                    mgPVal += 5;
-                    egPVal += 5;
+                    mgPVal += 3;
+                    egPVal += 6;
                 }
             }
         }
