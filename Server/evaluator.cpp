@@ -136,8 +136,8 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
 
         // double pawns
         if(fileMask & savedFriendlyPawns & ~(1ULL << position)){
-            mgPVal -= 6;
-            egPVal -= 12;
+            mgPVal -= 4;
+            egPVal -= 8;
         }
         
         // friendly pawns that are in left or right files from the current pawn
@@ -150,8 +150,8 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
         }
         // backward pawns, pawn that all his neighbors are ahead of him
         else if(!((forwardMask[rankIndex] ^ maxValue) & neighbors)){
-            mgPVal -= 5;
-            egPVal -= 10;
+            mgPVal -= 2;
+            egPVal -= 4;
         }
         // protected white pawns
         else if(coefficient == 1){
@@ -202,7 +202,7 @@ double Evaluator::bishopEval(int position, unsigned long long int friends, unsig
     // all the enemy pieces the bishop can reach
     int numOfEnemyTargets = __builtin_popcountll(allAttacks);
 
-    return (6 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    return (7 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
 }
 double Evaluator::rookEval(int position, unsigned long long int friends, unsigned long long int enemies){
     unsigned long long int blockers = friends | enemies;
@@ -215,7 +215,7 @@ double Evaluator::rookEval(int position, unsigned long long int friends, unsigne
     // all the enemy pieces the bishop can reach
     int numOfEnemyTargets = __builtin_popcountll(allAttacks);
 
-    return (6 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    return (5 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
 }
 
 double Evaluator::queenEval(int position, unsigned long long int friends, unsigned long long int enemies){
@@ -229,7 +229,7 @@ double Evaluator::queenEval(int position, unsigned long long int friends, unsign
     // all the enemy pieces the bishop can reach
     int numOfEnemyTargets = __builtin_popcountll(allAttacks);
 
-    return (6 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    return (3 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
 }
 
 double Evaluator::kingEval(int position, unsigned long long int friends, unsigned long long int enemies)
@@ -238,7 +238,7 @@ double Evaluator::kingEval(int position, unsigned long long int friends, unsigne
     attacked &= ~enemies;
 
     int piecesAttackingTheKing = __builtin_popcountll(attacked);
-    return (-15 * piecesAttackingTheKing);
+    return (-8 * piecesAttackingTheKing);
 }
 
 double Evaluator::evaluate(const posRepresent *representation){
@@ -268,9 +268,9 @@ double Evaluator::evaluate(const posRepresent *representation){
         int pieceInMyDictionary = abs(representation->board[position]) - 1;
         this->fBB[pieceInMyDictionary] |= (1ULL << position);
 
-        // if(pieceInMyDictionary > 0){
-            // val += (this->*evalArr[pieceInMyDictionary - 1])(position, representation->friends, representation->enemies);
-        // }
+        if(pieceInMyDictionary > 0){
+            val += (this->*evalArr[pieceInMyDictionary - 1])(position, representation->friends, representation->enemies);
+        }
 
         // calculating in which phase we are
         totalPhase += this->phaseValues[pieceInMyDictionary];
@@ -290,9 +290,9 @@ double Evaluator::evaluate(const posRepresent *representation){
         int pieceInMyDictionary = abs(representation->board[position]) - 1;
         this->eBB[pieceInMyDictionary] |= (1ULL << position);
 
-        // if(pieceInMyDictionary > 0){
-            // val -= (this->*evalArr[pieceInMyDictionary - 1])(position, representation->enemies, representation->friends);
-        // }
+        if(pieceInMyDictionary > 0){
+            val -= (this->*evalArr[pieceInMyDictionary - 1])(position, representation->enemies, representation->friends);
+        }
 
         // calculating in which phase we are
         totalPhase += this->phaseValues[pieceInMyDictionary];

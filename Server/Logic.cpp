@@ -584,3 +584,27 @@ std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep, bool onlyCapture
     }
     return moves;
 }
+
+void Logic::getPotentialCheckers(posRepresent *posRep)
+{
+    this->potentialCheckers = 0;
+    int kingIndex = posRep->myKing;
+
+    // get all pieces that in line of sight of the king or potential ones
+    unsigned long long int allAttacks = attacks.Queen(posRep->enemies, kingIndex);
+    allAttacks |= NAttacks[kingIndex];
+    allAttacks &= posRep->enemies;
+
+    while(allAttacks){
+        int targetSquare = __builtin_ctzll(allAttacks);
+        int piece = posRep->board[targetSquare];
+
+        if ((this->*attacksArr[abs(piece) - 1])(targetSquare, kingIndex, piece))
+        {
+            this->potentialCheckers |= (1ULL << targetSquare);
+        }
+
+
+        allAttacks &= ~(1ULL << targetSquare);
+    }
+}

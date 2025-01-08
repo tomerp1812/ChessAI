@@ -277,6 +277,56 @@ unsigned long long int ChessAi::update(posRepresent *representation, const Move&
     return hash;
 }
 
+void ChessAi::updateBestMove(MoveVal &moveVal, const MoveVal &ret, const Move &move, int currentMate, unsigned long long int updatedHash)
+{
+    // better move
+    if (ret.value > moveVal.value) {
+        moveVal.value = ret.value;
+        moveVal.mateIn = currentMate;
+        moveVal.move = move;
+        moveVal.positionHash = updatedHash;
+    } 
+    // same value move
+    else if (ret.value == moveVal.value) {
+        if (moveVal.mateIn != -1) {
+            // want to lose slower or win faster
+            if ((ret.value == negInf && moveVal.mateIn < currentMate) ||
+                (ret.value == inf && moveVal.mateIn > currentMate)) {
+                moveVal.mateIn = currentMate;
+                moveVal.move = move;
+                moveVal.positionHash = updatedHash;
+            }
+        } else {
+            moveVal.mateIn = currentMate;
+            moveVal.move = move;
+            moveVal.positionHash = updatedHash;
+        }
+    }
+}
+
+bool ChessAi::pruning(const AlphaBeta &alpha, const AlphaBeta &beta)
+{
+    if(alpha.value > beta.value){
+            return true;
+    }else if(alpha.value == beta.value){
+        if((alpha.value != inf && alpha.value != negInf) || 
+            (alpha.value == inf && alpha.mateIn <= beta.mateIn) ||
+            (alpha.value == negInf && alpha.mateIn >= beta.mateIn)){
+                return true;
+        }
+    }
+    return false;
+}
+
+void ChessAi::updateAlpha(const MoveVal &moveVal, AlphaBeta &alpha)
+{
+    if(moveVal.value > alpha.value ||
+        (moveVal.value == alpha.value && moveVal.mateIn != -1 && moveVal.mateIn < alpha.mateIn)){
+            alpha.value = moveVal.value;
+            alpha.mateIn = moveVal.mateIn;
+        }
+}
+
 void ChessAi::restore(posRepresent* representation,const posRepresent& sp, const Move& move){
     representation->turn = sp.turn;
     representation->halfMove = sp.halfMove;
@@ -347,7 +397,6 @@ MoveVal ChessAi::iddfs(posRepresent *representation)
     
     // need to record the move!
     zobrist->recordPosition(bestMove.positionHash); 
-
     // recording corrent position
     this->zobrist->saveTranspositionTable(hash, bestMove.value, this->totalDepth, bestMove.mateIn);
 
@@ -380,7 +429,7 @@ MoveVal ChessAi::search(posRepresent *representation, const std::vector<Move>& o
         auto currentTime = chrono::steady_clock::now();
         auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - this->startTime).count();
         if(this->startingDepth < this->totalDepth && elapsedTime > timeLimit){
-            return moveVal;
+            return MoveVal();
         }
 
         // Update Zobrist hash for the new position
@@ -402,32 +451,9 @@ MoveVal ChessAi::search(posRepresent *representation, const std::vector<Move>& o
             }
             this->zobrist->saveTranspositionTable(updatedHash, ret.value, this->totalDepth, currentMate);
         }
-
         restore(representation, sp, move);
         zobrist->undoPosition(updatedHash);
-        
-        // better move
-        if(ret.value > moveVal.value){
-            moveVal.value = ret.value;
-            moveVal.mateIn = currentMate;
-            moveVal.move = move;
-            moveVal.positionHash = updatedHash;
-        // same value move
-        }else if(ret.value == moveVal.value){
-            if(moveVal.mateIn != -1){
-                // want to win faster or lose slower
-                if((ret.value == negInf && moveVal.mateIn < currentMate) || 
-                (ret.value == inf && moveVal.mateIn > currentMate)){
-                    moveVal.mateIn = currentMate;
-                    moveVal.move = move;
-                    moveVal.positionHash = updatedHash;
-                }
-            }else{
-                moveVal.mateIn = currentMate;
-                moveVal.move = move;
-                moveVal.positionHash = updatedHash;
-            }
-        }
+        updateBestMove(moveVal, ret, move, currentMate, updatedHash);
     }
     return moveVal;
 }
@@ -454,11 +480,11 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, Alpha
     }
 
     if (depth == this->halfDepth) {
-    if (alpha.value == inf || alpha.value == negInf || beta.value == inf || beta.value == negInf) {
-        // Skip quiescence
-        moveVal.value = this->evaluator->evaluate(representation);
-        return moveVal; 
-    }
+        if (alpha.value == inf || alpha.value == negInf || beta.value == inf || beta.value == negInf) {
+            // Skip quiescence
+            moveVal.value = this->evaluator->evaluate(representation);
+            return moveVal; 
+        }
     return quiescence(representation, this->halfDepth, alpha, beta, hash);
 }
 
@@ -491,41 +517,10 @@ MoveVal ChessAi::negaMax(posRepresent *representation, unsigned int depth, Alpha
         }
         restore(representation, sp, move);
         zobrist->undoPosition(updatedHash);
-
-        // better move
-        if(ret.value > moveVal.value){
-            moveVal.value = ret.value;
-            moveVal.mateIn = currentMate;
-        // same value move
-        }else if(ret.value == moveVal.value){
-            if(moveVal.mateIn != -1){
-                // want to lose slower
-                if(ret.value == negInf){
-                    moveVal.mateIn = max(moveVal.mateIn, currentMate);
-                // want to win faster
-                }else if(ret.value == inf){
-                    moveVal.mateIn = min(moveVal.mateIn, currentMate);
-                }
-            }else{
-                moveVal.mateIn = currentMate;
-            }
-        }
-
-        if(moveVal.value > alpha.value ||
-        (moveVal.value == alpha.value && moveVal.mateIn != -1 && moveVal.mateIn < alpha.mateIn)){
-            alpha.value = moveVal.value;
-            alpha.mateIn = moveVal.mateIn;
-        }
-
-        // pruning
-        if(alpha.value > beta.value){
+        updateBestMove(moveVal, ret, move, currentMate, updatedHash);
+        updateAlpha(moveVal, alpha);
+        if(pruning(alpha, beta)){
             break;
-        }else if(alpha.value == beta.value){
-            if((alpha.value != inf && alpha.value != negInf) || 
-            (alpha.value == inf && alpha.mateIn <= beta.mateIn) ||
-            (alpha.value == negInf && alpha.mateIn >= beta.mateIn)){
-                break;
-            }
         }
     }
     return moveVal;
@@ -562,11 +557,7 @@ MoveVal ChessAi::quiescence(posRepresent *representation, unsigned int depth, Al
         return moveVal;
     }
 
-    if(moveVal.value > alpha.value ||
-        (moveVal.value == alpha.value && moveVal.mateIn != -1 && moveVal.mateIn < alpha.mateIn)){
-            alpha.value = moveVal.value;
-            alpha.mateIn = moveVal.mateIn;
-    }
+    updateAlpha(moveVal, alpha);
 
     // only captures
     vector<Move> optionalMoves = this->logic->getOptionalMoves(representation, true);
@@ -598,42 +589,11 @@ MoveVal ChessAi::quiescence(posRepresent *representation, unsigned int depth, Al
 
         restore(representation, sp, move);
         zobrist->undoPosition(updatedHash);
+        updateBestMove(moveVal, ret, move, currentMate, updatedHash);
+        updateAlpha(moveVal, alpha);
 
-
-        // better move
-        if(ret.value > moveVal.value){
-            moveVal.value = ret.value;
-            moveVal.mateIn = currentMate;
-        // same value move
-        }else if(ret.value == moveVal.value){
-            if(moveVal.mateIn != -1){
-                // want to lose slower
-                if(ret.value == negInf){
-                    moveVal.mateIn = max(moveVal.mateIn, currentMate);
-                // want to win faster
-                }else if(ret.value == inf){
-                    moveVal.mateIn = min(moveVal.mateIn, currentMate);
-                }
-            }else{
-                moveVal.mateIn = currentMate;
-            }
-        }
-
-        if(moveVal.value > alpha.value ||
-        (moveVal.value == alpha.value && moveVal.mateIn != -1 && moveVal.mateIn < alpha.mateIn)){
-            alpha.value = moveVal.value;
-            alpha.mateIn = moveVal.mateIn;
-        }
-
-        // pruning
-        if(alpha.value > beta.value){
+        if(pruning(alpha, beta)){
             break;
-        }else if(alpha.value == beta.value){
-            if((alpha.value != inf && alpha.value != negInf) || 
-            (alpha.value == inf && alpha.mateIn <= beta.mateIn) ||
-            (alpha.value == negInf && alpha.mateIn >= beta.mateIn)){
-                break;
-            }
         }
 
     }

@@ -71,6 +71,9 @@ class ChessAi {
         bool terminate(std::vector<Move> optionalMoves, int depth);
         void save(const posRepresent* representation, posRepresent& sp);
         unsigned long long int update(posRepresent* representation, const Move& move, unsigned long long int hash);
+        void updateBestMove(MoveVal &moveVal, const MoveVal &ret, const Move &move, int currentMate, unsigned long long int updatedHash);
+        bool pruning(const AlphaBeta &alpha, const AlphaBeta &beta);
+        void updateAlpha(const MoveVal &moveVal, AlphaBeta &alpha);
         void restore(posRepresent* representation, const posRepresent& sp, const Move& move);
         std::string moveToString(Move move);
 };
