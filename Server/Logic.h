@@ -32,6 +32,8 @@ public:
     void precomputKnightMoveData();
     void precomputMoveData();
     bool legalPosition(posRepresent *posRep);
+    bool check(posRepresent *posRep);
+    bool optionalMovesExists(posRepresent* posRep);
     std::vector<Move> getOptionalMoves(posRepresent* posRep, bool onlyCaptures);
     void getPotentialCheckers(posRepresent* posRep);
     bool bishopAttack(int start, int target, int piece);

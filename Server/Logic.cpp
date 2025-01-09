@@ -176,6 +176,27 @@ bool Logic::legalPosition(posRepresent *posRep)
     return true;
 }
 
+// function to check if a player in check
+bool Logic::check(posRepresent *posRep)
+{
+    unsigned long long int checkers = this->potentialCheckers;
+    int kingIndex = posRep->myKing;
+    unsigned long long int allAttacks = attacks.Queen(posRep->blockers, kingIndex);
+    allAttacks |= NAttacks[kingIndex];
+    // remove all friendly pieces
+    allAttacks &= ~posRep->friends;
+    // remove all empty squares
+    allAttacks &= posRep->enemies;
+    allAttacks &= checkers;
+    // if still in check one of the checkers will still be there, therefore allAttacks will be none zero 
+    return allAttacks != 0;
+}
+
+bool Logic::optionalMovesExists(posRepresent *posRep)
+{
+    return false;
+}
+
 // direct attacks!
 bool Logic::pawnAttack(int start, int target, int piece)
 {
@@ -255,7 +276,15 @@ bool Logic::checkMove(int start, int targetSquare, posRepresent *posRep)
 
     posRep->blockers = (posRep->friends | posRep->enemies);
 
-    bool isLegal = legalPosition(posRep);
+    bool isLegal;
+    // if king moved i cannot use the pottential attackers
+    if(abs(savePiece) == 6){
+        isLegal = legalPosition(posRep);
+    }else{
+        // checks for any other piece that moves if there are still attackers more efficient
+        isLegal = !check(posRep); 
+    }
+    
 
     posRep->board[targetSquare] = saveTarget;
     posRep->board[start] = savePiece;
@@ -302,7 +331,7 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
             posRep->enemies &= ~(1ULL << targetPosition);
             posRep->board[targetPosition] = 0;
             posRep->blockers = (posRep->friends | posRep->enemies);
-            if (checkMove(start, posRep->enPassant, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, posRep->enPassant, posRep))
             {
                 // add en-Passant
                 addMove(moves, start, posRep->enPassant);
@@ -346,7 +375,7 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
             posRep->enemies &= ~(1ULL << targetPosition);
             posRep->board[targetPosition] = 0;
             posRep->blockers = (posRep->friends | posRep->enemies);
-            if (checkMove(start, posRep->enPassant, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, posRep->enPassant, posRep))
             {
                 // add en-Passant
                 addMove(moves, start, posRep->enPassant);
@@ -379,7 +408,7 @@ void Logic::pawnOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
 
         pawnMoves &= ~(1ULL << targetSquare);
 
-        if (checkMove(start, targetSquare, posRep))
+        if (this->potentialCheckers == 0 || checkMove(start, targetSquare, posRep))
         {
             // white pawn promotion
             if (posRep->turn == 'w' && targetSquare > 55)
@@ -414,7 +443,7 @@ void Logic::knightOptionalMoves(std::vector<Move> &moves, int start, posRepresen
 
         if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            if (checkMove(start, targetSquare, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, targetSquare, posRep))
             {
                 addMove(moves, start, targetSquare);
             }
@@ -435,7 +464,7 @@ void Logic::bishopOptionalMoves(std::vector<Move> &moves, int start, posRepresen
         bishopAttacks &= ~(1ULL << targetSquare);
         if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            if (checkMove(start, targetSquare, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, targetSquare, posRep))
             {
                 addMove(moves, start, targetSquare);
             }
@@ -456,7 +485,7 @@ void Logic::rookOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
         rookAttacks &= ~(1ULL << targetSquare);
         if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            if (checkMove(start, targetSquare, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, targetSquare, posRep))
             {
                 addMove(moves, start, targetSquare);
             }
@@ -477,7 +506,7 @@ void Logic::queenOptionalMoves(std::vector<Move> &moves, int start, posRepresent
 
         if (!onlyCaptures || posRep->board[targetSquare] != 0)
         {
-            if (checkMove(start, targetSquare, posRep))
+            if (this->potentialCheckers == 0 || checkMove(start, targetSquare, posRep))
             {
                 addMove(moves, start, targetSquare);
             }
@@ -574,6 +603,7 @@ std::vector<Move> Logic::getOptionalMoves(posRepresent *posRep, bool onlyCapture
 {
     std::vector<Move> moves;
     unsigned long long int friends = posRep->friends;
+    getPotentialCheckers(posRep);
 
     while (friends)
     {
