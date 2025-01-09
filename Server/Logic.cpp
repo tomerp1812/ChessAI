@@ -538,7 +538,7 @@ void Logic::kingOptionalMoves(std::vector<Move> &moves, int start, posRepresent 
     // Castling
 
     // checks if not in check
-    if (!onlyCaptures && legalPosition(posRep))
+    if (!onlyCaptures && !check(posRep))
     {
         if (posRep->turn == 'w')
         {

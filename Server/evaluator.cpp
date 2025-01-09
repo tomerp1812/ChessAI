@@ -96,7 +96,7 @@ void Evaluator::setTables(char turn){
     }
 }
 
-double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns, unsigned long long int enemyPawns, int coefficient, const double* mgPP, const double* egPP, const unsigned long long int* forwardMask, const unsigned long long int* backwardMask){
+double Evaluator::pawnEval(int middleGamePercentage, int endGamePercentage, unsigned long long int friendlyPawns, unsigned long long int enemyPawns, int coefficient, const double* mgPP, const double* egPP, const unsigned long long int* forwardMask, const unsigned long long int* backwardMask){
     double mgPVal = 0;
     double egPVal = 0;
     unsigned long long int fileA = 0x0101010101010101; 
@@ -183,62 +183,133 @@ double Evaluator::pawnEval(int totalPhase, unsigned long long int friendlyPawns,
         friendlyPawns &= ~(1ULL << position);
     }
 
-    return (mgPVal * (double(totalPhase) / 24)) + (egPVal * (1 - (double(totalPhase) / 24)));
+    return (mgPVal * middleGamePercentage) + (egPVal * endGamePercentage);
 }
 
-double Evaluator::knightEval(int position, unsigned long long int friends, unsigned long long int enemies)
+double Evaluator::knightEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage)
 {
     return 0.0;
 }
 
-double Evaluator::bishopEval(int position, unsigned long long int friends, unsigned long long int enemies){
-    unsigned long long int blockers = friends | enemies;
-    unsigned long long int allAttacks = attacks.Bishop(blockers, position);
-    allAttacks &= ~friends;
-    
-    // all possible squares the bishop can reach
-    int numOfTargetSquares = __builtin_popcountll(allAttacks);
-    allAttacks &= enemies;
-    // all the enemy pieces the bishop can reach
-    int numOfEnemyTargets = __builtin_popcountll(allAttacks);
+double Evaluator::bishopEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage){
+    double val = 0;
 
-    return (7 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    unsigned long long int friendlyBishops = this->fBB[2];
+    unsigned long long int enemyBishops = this->eBB[2];
+
+    // giving more points to the bishop pair
+    if(__builtin_popcountll(friendlyBishops) == 2){
+        val += (8 * middleGamePercentage) + (4 * endGamePercentage);
+    }
+    if(__builtin_popcountll(enemyBishops) == 2){
+        val -= (8 * middleGamePercentage) + (4 * endGamePercentage);
+    }
+
+   
+    while(friendlyBishops){
+        int position = __builtin_ctzll(friendlyBishops);
+
+         // adding points for movement, attacking and defending
+        unsigned long long int allAttacks = attacks.Bishop(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->friends);
+        unsigned long long int attacking = (allAttacks & representation->enemies);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val += (8 * __builtin_popcountll(attacking)) + (4 * __builtin_popcountll(defending)) + (2 * __builtin_popcountll(movement));
+        friendlyBishops &= ~(1ULL << position);
+    }
+
+    while(enemyBishops){
+        int position = __builtin_ctzll(enemyBishops);
+        unsigned long long int allAttacks = attacks.Bishop(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->enemies);
+        unsigned long long int attacking = (allAttacks & representation->friends);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val -= ((8 * __builtin_popcountll(attacking)) + (4 * __builtin_popcountll(defending)) + (2 * __builtin_popcountll(movement)));
+        enemyBishops &= ~(1ULL << position);
+    }
+    return val;
 }
-double Evaluator::rookEval(int position, unsigned long long int friends, unsigned long long int enemies){
-    unsigned long long int blockers = friends | enemies;
-    unsigned long long int allAttacks = attacks.Rook(blockers, position);
-    allAttacks &= ~friends;
-    
-    // all possible squares the bishop can reach
-    int numOfTargetSquares = __builtin_popcountll(allAttacks);
-    allAttacks &= enemies;
-    // all the enemy pieces the bishop can reach
-    int numOfEnemyTargets = __builtin_popcountll(allAttacks);
+double Evaluator::rookEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage){
+    double val = 0;
 
-    return (5 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    unsigned long long int friendlyRooks = this->fBB[3];
+    unsigned long long int enemyRooks = this->eBB[3];
+   
+    while(friendlyRooks){
+        int position = __builtin_ctzll(friendlyRooks);
+
+         // adding points for movement, attacking and defending
+        unsigned long long int allAttacks = attacks.Rook(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->friends);
+        unsigned long long int attacking = (allAttacks & representation->enemies);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val += (6 * __builtin_popcountll(attacking)) + (3 * __builtin_popcountll(defending)) + __builtin_popcountll(movement);
+        friendlyRooks &= ~(1ULL << position);
+    }
+
+    while(enemyRooks){
+        int position = __builtin_ctzll(enemyRooks);
+        unsigned long long int allAttacks = attacks.Rook(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->enemies);
+        unsigned long long int attacking = (allAttacks & representation->friends);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val -= ((6 * __builtin_popcountll(attacking)) + (3 * __builtin_popcountll(defending)) + __builtin_popcountll(movement));
+        enemyRooks &= ~(1ULL << position);
+    }
+    return val;
 }
 
-double Evaluator::queenEval(int position, unsigned long long int friends, unsigned long long int enemies){
-    unsigned long long int blockers = friends | enemies;
-    unsigned long long int allAttacks = attacks.Queen(blockers, position);
-    allAttacks &= ~friends;
-    
-    // all possible squares the bishop can reach
-    int numOfTargetSquares = __builtin_popcountll(allAttacks);
-    allAttacks &= enemies;
-    // all the enemy pieces the bishop can reach
-    int numOfEnemyTargets = __builtin_popcountll(allAttacks);
+double Evaluator::queenEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage){
+    double val = 0;
 
-    return (3 * numOfEnemyTargets) + (2 * (numOfTargetSquares - numOfEnemyTargets));
+    unsigned long long int friendlyQueens = this->fBB[4];
+    unsigned long long int enemyQueens = this->eBB[4];
+   
+    while(friendlyQueens){
+        int position = __builtin_ctzll(friendlyQueens);
+
+         // adding points for movement, attacking and defending
+        unsigned long long int allAttacks = attacks.Queen(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->friends);
+        unsigned long long int attacking = (allAttacks & representation->enemies);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val += (3 * __builtin_popcountll(attacking)) + (2 * __builtin_popcountll(defending)) + __builtin_popcountll(movement);
+        friendlyQueens &= ~(1ULL << position);
+    }
+
+    while(enemyQueens){
+        int position = __builtin_ctzll(enemyQueens);
+        unsigned long long int allAttacks = attacks.Queen(representation->blockers, position);
+        unsigned long long int defending = (allAttacks & representation->enemies);
+        unsigned long long int attacking = (allAttacks & representation->friends);
+        unsigned long long int movement = (allAttacks & (~representation->blockers)); 
+        val -= ((3 * __builtin_popcountll(attacking)) + (2 * __builtin_popcountll(defending)) + __builtin_popcountll(movement));
+        enemyQueens &= ~(1ULL << position);
+    }
+    return val;
 }
 
-double Evaluator::kingEval(int position, unsigned long long int friends, unsigned long long int enemies)
+double Evaluator::kingEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage)
 {
-    unsigned long long int attacked = attacks.Queen(enemies, position);
-    attacked &= ~enemies;
+    return 0;
+}
 
-    int piecesAttackingTheKing = __builtin_popcountll(attacked);
-    return (-8 * piecesAttackingTheKing);
+double Evaluator::piecesEval(const posRepresent *representation, int middleGamePercentage, int endGamePercentage)
+{
+    double val = 0;
+    
+    // pawns contributions
+    val += pawnEval(middleGamePercentage, endGamePercentage, this->fBB[0], this->eBB[0], coefficient, this->fppmg, this->fppeg, this->ffm, this->efm);
+    val -= pawnEval(middleGamePercentage, endGamePercentage, this->eBB[0], this->fBB[0], -coefficient, this->eppmg, this->eppeg, this->efm, this->ffm);
+
+    val += knightEval(representation, middleGamePercentage, endGamePercentage);
+    val += bishopEval(representation, middleGamePercentage, endGamePercentage);
+    val += rookEval(representation, middleGamePercentage, endGamePercentage);
+    val += queenEval(representation, middleGamePercentage, endGamePercentage);
+    val += kingEval(representation, middleGamePercentage, endGamePercentage);
+    
+
+    return val;
 }
 
 double Evaluator::evaluate(const posRepresent *representation){
@@ -268,9 +339,9 @@ double Evaluator::evaluate(const posRepresent *representation){
         int pieceInMyDictionary = abs(representation->board[position]) - 1;
         this->fBB[pieceInMyDictionary] |= (1ULL << position);
 
-        if(pieceInMyDictionary > 0){
-            val += (this->*evalArr[pieceInMyDictionary - 1])(position, representation->friends, representation->enemies);
-        }
+        // if(pieceInMyDictionary > 0){
+        //     val += (this->*evalArr[pieceInMyDictionary - 1])(position, representation->friends, representation->enemies);
+        // }
 
         // calculating in which phase we are
         totalPhase += this->phaseValues[pieceInMyDictionary];
@@ -290,9 +361,9 @@ double Evaluator::evaluate(const posRepresent *representation){
         int pieceInMyDictionary = abs(representation->board[position]) - 1;
         this->eBB[pieceInMyDictionary] |= (1ULL << position);
 
-        if(pieceInMyDictionary > 0){
-            val -= (this->*evalArr[pieceInMyDictionary - 1])(position, representation->enemies, representation->friends);
-        }
+        // if(pieceInMyDictionary > 0){
+        //     val -= (this->*evalArr[pieceInMyDictionary - 1])(position, representation->enemies, representation->friends);
+        // }
 
         // calculating in which phase we are
         totalPhase += this->phaseValues[pieceInMyDictionary];
@@ -305,19 +376,11 @@ double Evaluator::evaluate(const posRepresent *representation){
     }
     
     totalPhase = std::min(totalPhase, 24);
-    val += (mgPositionsVals * (double(totalPhase) / 24)) + (egPositionsVals * (1 - (double(totalPhase) / 24)));
+    double middleGamePercentage = (double(totalPhase) / 24);
+    double endGamePercentage = (1 - (double(totalPhase) / 24));
+    val += (mgPositionsVals * middleGamePercentage) + (egPositionsVals * endGamePercentage);
 
-    // pawns contributions
-    val += pawnEval(totalPhase, this->fBB[0], this->eBB[0], coefficient, this->fppmg, this->fppeg, this->ffm, this->efm);
-    val -= pawnEval(totalPhase, this->eBB[0], this->fBB[0], -coefficient, this->eppmg, this->eppeg, this->efm, this->ffm);
-
-    // giving more points to the bishop pair
-    if(__builtin_popcountll(this->fBB[2]) == 2){
-        val += (14 * (double(totalPhase) / 24)) + (4 * (1 - (double(totalPhase) / 24)));
-    }
-    if(__builtin_popcountll(this->eBB[2]) == 2){
-        val -= (14 * (double(totalPhase) / 24)) + (4 * (1 - (double(totalPhase) / 24)));
-    }
+    val += piecesEval(representation, middleGamePercentage, endGamePercentage);
     return val;
     
 }
