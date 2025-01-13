@@ -14,12 +14,19 @@
                 "Communicator.cpp", 
                 "lookup.cpp",
                 "evaluator.cpp",
+                "WebSocket.cpp",
+                "ThreadPool.cpp",
                 "zobristHash.cpp",
                 "-o", 
                 "server.exe",
                 "-std=c++17",
                 "-lws2_32",
-                "-w"
+                "-w",
+                "-I", "D:/Boost/boost_1_87_0",
+                "-I", "D:/Boost/boost_1_87_0/boost",
+                "D:/Boost/boost_1_87_0/stage/lib/libboost_system-mgw14-mt-d-x64-1_87.a",
+                "D:/Boost/boost_1_87_0/stage/lib/libboost_thread-mgw14-mt-d-x64-1_87.a",
+                "D:/Boost/boost_1_87_0/stage/lib/libboost_date_time-mgw14-mt-d-x64-1_87.a"
             ],
             "group": {
                 "kind": "build",

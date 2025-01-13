@@ -31,7 +31,7 @@ class Evaluator{
         const unsigned long long int* ffm;
         const unsigned long long int* efm;
 
-        double (Evaluator::*evalArr[5])(int position, unsigned long long int friends, unsigned long long int enemies);
+        double (Evaluator::*evalArr[5])(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
 
     public:
         Evaluator();
@@ -40,12 +40,13 @@ class Evaluator{
         void initPhaseVal();
         void initEvalArr();
         void setTables(char turn);
-        double pawnEval(int totalPhase, unsigned long long int friendlyPawns, unsigned long long int enemyPawns, int coefficient, const double* mgPP, const double* egPP, const unsigned long long int* forwardMask, const unsigned long long int* backwardMask);
-        double knightEval(int position, unsigned long long int friends, unsigned long long int enemies);
-        double bishopEval(int position, unsigned long long int friends, unsigned long long int enemies);
-        double rookEval(int position, unsigned long long int friends, unsigned long long int enemies);
-        double queenEval(int position, unsigned long long int friends, unsigned long long int enemies);
-        double kingEval(int position, unsigned long long int friends, unsigned long long int enemies);
+        double pawnEval(int middleGamePercentage, int endGamePercentage, unsigned long long int friendlyPawns, unsigned long long int enemyPawns, int coefficient, const double* mgPP, const double* egPP, const unsigned long long int* forwardMask, const unsigned long long int* backwardMask);
+        double knightEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
+        double bishopEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
+        double rookEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
+        double queenEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
+        double kingEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
+        double piecesEval(const posRepresent* representation, int middleGamePercentage, int endGamePercentage);
         double evaluate(const posRepresent* representation);
         void reorderMoves(posRepresent *representation, std::vector<Move>& optionalMoves);
 };

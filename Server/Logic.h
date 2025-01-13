@@ -7,8 +7,8 @@
 struct Move
 {
     double guessedValue = 0.0; // for reordering moves
-    int startPos;
-    int targetPos;
+    int startPos = -1;
+    int targetPos = -1;
     int promotedPiece = 0;
 };
 
@@ -21,6 +21,7 @@ private:
     static int knightMovesToEdge[64][8];
     static int kingMovesToEdge[64][8];
     int promotionPieces[4];
+    unsigned long long int potentialCheckers;
     void (Logic::*optionalMovesArr[6])(std::vector<Move>& moves, int start, posRepresent *posRep, bool onlyCaptures);
     bool (Logic::*attacksArr[6])(int start, int target, int piece);
 
@@ -31,7 +32,10 @@ public:
     void precomputKnightMoveData();
     void precomputMoveData();
     bool legalPosition(posRepresent *posRep);
+    bool check(posRepresent *posRep);
+    bool optionalMovesExists(posRepresent* posRep);
     std::vector<Move> getOptionalMoves(posRepresent* posRep, bool onlyCaptures);
+    void getPotentialCheckers(posRepresent* posRep);
     bool bishopAttack(int start, int target, int piece);
     bool rookAttack(int start, int target, int piece);
     bool knightAttack(int start, int target, int piece);
