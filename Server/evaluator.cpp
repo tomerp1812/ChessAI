@@ -27,8 +27,8 @@ Evaluator::~Evaluator(){
 
 void Evaluator::initPieceToVal(){
     this->pieceToVal[1] = 100; // white pawn
-    this->pieceToVal[2] = 290; // white knight
-    this->pieceToVal[3] = 300; // white bishop
+    this->pieceToVal[2] = 320; // white knight
+    this->pieceToVal[3] = 330; // white bishop
     this->pieceToVal[4] = 500; // white rook
     this->pieceToVal[5] = 900; // white queen
     this->pieceToVal[6] = 10000000; // white king

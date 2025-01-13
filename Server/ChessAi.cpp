@@ -401,9 +401,9 @@ MoveVal ChessAi::iddfs(posRepresent *representation)
     this->zobrist->saveTranspositionTable(hash, bestMove.value, this->totalDepth, bestMove.mateIn);
 
     // data printers
-    cout << "depth: " << this->totalDepth << std::endl;
-    cout << "mate in: " << bestMove.mateIn << std::endl;
-    cout << "move evaluation: " << bestMove.value << endl;
+    // cout << "depth: " << this->totalDepth << std::endl;
+    // cout << "mate in: " << bestMove.mateIn << std::endl;
+    // cout << "move evaluation: " << bestMove.value << endl;
     return bestMove;
 }
 
