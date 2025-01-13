@@ -15,6 +15,7 @@
                 "lookup.cpp",
                 "evaluator.cpp",
                 "WebSocket.cpp",
+                "ThreadPool.cpp",
                 "zobristHash.cpp",
                 "-o", 
                 "server.exe",
