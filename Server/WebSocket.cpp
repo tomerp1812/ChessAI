@@ -5,7 +5,7 @@
 
 using namespace boost::asio;
 using namespace boost::beast;
-
+using namespace std;
 
 WebSocket::WebSocket(int port)
     : acceptor(ioc, ip::tcp::endpoint(ip::tcp::v4(), port)) {
@@ -20,7 +20,7 @@ void WebSocket::session(ip::tcp::socket socket) {
     ChessAi* sessionAi = nullptr;
     try {
 
-        websocket::stream<ip::tcp::socket> ws(std::move(socket));
+        websocket::stream<ip::tcp::socket> ws(move(socket));
         ws.accept();
 
         bool running = false;
@@ -28,11 +28,11 @@ void WebSocket::session(ip::tcp::socket socket) {
         while (true) {
             boost::beast::flat_buffer buffer;
             ws.read(buffer);
-            std::string message = buffers_to_string(buffer.data());
+            string message = buffers_to_string(buffer.data());
 
             if(message == "START_GAME"){
                 if(sessionAi){
-                    std::cout << "chessAi already exists" << std::endl;
+                    cout << "chessAi already exists" << endl;
                     delete sessionAi; 
                 }
                 sessionAi = new ChessAi();
@@ -42,21 +42,21 @@ void WebSocket::session(ip::tcp::socket socket) {
                 ws.write(boost::asio::buffer("AI_DELETED"));
                 break;
             }else if(running){
-                std::string aiMove = sessionAi->run(message);
+                string aiMove = sessionAi->run(message);
                 ws.write(boost::asio::buffer(aiMove));
             }
         }
-    } catch (std::exception &e) {
-        std::cerr << "Session error: " << e.what() << std::endl;
+    } catch (exception &e) {
+        cerr << "Session error: " << e.what() << endl;
     } 
     delete sessionAi;   
 }
 
 void WebSocket::run() {
     while (true) {
-        auto socket = std::make_shared<ip::tcp::socket>(acceptor.accept());
+        auto socket = make_shared<ip::tcp::socket>(acceptor.accept());
         tp->enqueue([this, socket]() mutable {
-            this->session(std::move(*socket));
+            this->session(move(*socket));
         });
     }
 }

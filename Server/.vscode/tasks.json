@@ -17,6 +17,7 @@
                 "WebSocket.cpp",
                 "ThreadPool.cpp",
                 "zobristHash.cpp",
+                "opennings.cpp",
                 "-o", 
                 "server.exe",
                 "-std=c++17",

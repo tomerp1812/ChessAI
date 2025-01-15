@@ -72,6 +72,8 @@
         "*.ipp": "cpp",
         "strstream": "cpp",
         "any": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "rope": "cpp",
+        "slist": "cpp"
     }
 }
